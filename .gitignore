@@ -1,0 +1,27 @@
+node_modules/
+dist/
+/release/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+coverage/
+playwright-report/
+test-results/
+
+generated-assets/
+docs/superpowers/
+
+# 本地工作区与个人笔记，不入库
+.workbuddy/
+.probe-*
+
+# 上游官网营销页，P0-02 清理前不入库
+landing/
