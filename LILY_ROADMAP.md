@@ -92,8 +92,8 @@
 
 ### P0 · 地基与品牌化
 
-- [ ] `P0-01` 改名：`productName` → `Lily`，`appId` → `com.lily.desktoppet`，窗口标题/托盘/日志名统一（S）
-  - 注意：改名会改 `userData` 目录，先做配置迁移脚本，别丢现有设置
+- [x] `P0-01` 改名：`productName` → `Lily`，`appId` → `com.chizh.lily`，窗口标题/托盘/日志名统一（S）
+  - 结果（2026-11-05）：已改 `package.json`、`electron-builder.yml`、托盘提示、面板标题、i18n 文案、更新检查链接（指向本仓库）。新增 `services/user-data-migration.js`，启动时把 `%APPDATA%/desktop-pet` 一次性复制到 `%APPDATA%/Lily`，已验证生效且旧目录保留。上游营销页 `landing/` 暂不入库，待 P0-02 清理。
 - [ ] `P0-02` 清理上游残留：`landing/`、赞助二维码、上游文档与无关测试（S）
 - [ ] `P0-03` 建立自己的模块边界：`src/lily/` 放新功能，尽量不动上游文件（S）
 - [ ] `P0-04` 配置分离：Lily 自己的设置写 `lily.config.json`，不污染上游 config 结构（M）
@@ -166,7 +166,7 @@
 
 - [ ] `P5-01` 知识源抽象：本地文件夹 / Obsidian vault / 资源包，统一成 `Doc[]`（M）
 - [ ] `P5-02` Obsidian 只读接入：配置 vault 根 + 子目录白名单，只读不写（S）
-  - 待确认：指向 Personal vault `03 Knowledge/Lily` 还是新建独立目录
+  - 已定（2026-11-05）：`C:/Personal/OneDrive/Obsidian_Personal/03 Knowledge/Lily`，与个人知识库集中管理
 - [ ] `P5-03` 索引：md 解析 + 分块 + BM25 关键词检索（先不上向量）（M）
 - [ ] `P5-04` 问答：检索 → 拼上下文 → 模板化回答（无 LLM 也能用）（M）
 - [ ] `P5-05` LLM 接口层：留一个可替换的 provider（本地 Ollama / 云端 API），默认关闭（M）
@@ -177,6 +177,7 @@
 
 - [ ] `P6-01` 课程表数据格式定义（JSON schema：课程/教师/地点/周次/单双周/时间段）（S）
 - [ ] `P6-02` 导入：ics / Excel / 手动表格（三选二即可）（M）
+  - 待你提供：课程表来源。已查 `C:/Work/08_AI/programming`、`C:/Personal`、WeChatProjects 与 GitHub（Chizh-tech），未找到课程表小程序工程
 - [ ] `P6-03` 提醒引擎：提前 N 分钟、上课、作业截止、考试倒计时（M）
 - [ ] `P6-04` 提醒呈现：气泡 + Windows 通知 + 托盘角标，可按课程静音（S）
 - [ ] `P6-05` 今日视图：点 Lily 看今天还有什么（S）
