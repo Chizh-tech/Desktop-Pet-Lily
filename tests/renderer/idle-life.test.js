@@ -88,13 +88,17 @@ function setup(overrides = {}) {
     getCurrentAsset: () => state.current,
     logger: { debug() {}, warn() {}, info() {}, error() {} },
     random: () => {
-      if (randomValues.length === 0) return 0.5;
+      if (randomValues.length === 0) {
+        return typeof overrides.random === "number" ? overrides.random : 0.5;
+      }
       const value = randomValues[randomIndex % randomValues.length];
       randomIndex += 1;
       return value;
     },
     timers,
-    options: overrides.options
+    options: overrides.options,
+    canWander: overrides.canWander,
+    onWander: overrides.onWander
   });
 
   return { timers, overlay, idleLife, state };
@@ -207,5 +211,105 @@ describe("idle life blinking", () => {
     expect(IDLE_LIFE_DEFAULTS.gapMinMs).toBeLessThan(IDLE_LIFE_DEFAULTS.gapMaxMs);
     expect(IDLE_LIFE_DEFAULTS.blinkMaxMs).toBeLessThan(200);
     expect(IDLE_LIFE_DEFAULTS.gapMinMs).toBeGreaterThan(1500);
+  });
+});
+
+describe("idle life wandering", () => {
+  // 0.3 让三个随机判定同时成立：低于 wanderChance、判定为向左、时长取中间值。
+  function setupWander(overrides = {}) {
+    const wanders = [];
+    const harness = setup({
+      random: 0.3,
+      canWander: () => true,
+      onWander: (payload) => wanders.push(payload),
+      ...overrides
+    });
+    return { ...harness, wanders };
+  }
+
+  it("walks once the first wander delay elapses", () => {
+    const { timers, idleLife, wanders } = setupWander();
+    idleLife.start();
+
+    timers.advance(IDLE_LIFE_DEFAULTS.wanderFirstDelayMs - 1);
+    expect(wanders).toHaveLength(0);
+
+    timers.advance(1);
+    expect(wanders).toHaveLength(1);
+    expect(wanders[0].direction).toBe("left");
+    expect(wanders[0].durationMs).toBeGreaterThanOrEqual(IDLE_LIFE_DEFAULTS.wanderDurationMinMs);
+    expect(wanders[0].durationMs).toBeLessThanOrEqual(IDLE_LIFE_DEFAULTS.wanderDurationMaxMs);
+    expect(wanders[0].speed).toBe(IDLE_LIFE_DEFAULTS.wanderSpeed);
+  });
+
+  it("keeps rescheduling while wandering is not allowed", () => {
+    let allowed = false;
+    const { timers, idleLife, wanders } = setupWander({ canWander: () => allowed });
+    idleLife.start();
+
+    timers.advance(IDLE_LIFE_DEFAULTS.wanderFirstDelayMs);
+    expect(wanders).toHaveLength(0);
+
+    // 被拒一次不能就此停摆，放开限制后应该能自己走起来。
+    allowed = true;
+    timers.advance(IDLE_LIFE_DEFAULTS.wanderGapMaxMs + 2000);
+    expect(wanders).toHaveLength(1);
+  });
+
+  it("stops when disabled and resumes when re-enabled", () => {
+    const { timers, idleLife, wanders } = setupWander();
+    idleLife.start();
+
+    idleLife.setWanderEnabled(false);
+    timers.advance(IDLE_LIFE_DEFAULTS.wanderGapMaxMs * 2);
+    expect(wanders).toHaveLength(0);
+
+    idleLife.setWanderEnabled(true);
+    timers.advance(IDLE_LIFE_DEFAULTS.wanderGapMaxMs + 2000);
+    expect(wanders).toHaveLength(1);
+  });
+
+  it("respects the wander chance", () => {
+    const { timers, idleLife, wanders } = setupWander({ options: { wanderChance: 0 } });
+    idleLife.start();
+
+    timers.advance(IDLE_LIFE_DEFAULTS.wanderGapMaxMs * 3);
+    expect(wanders).toHaveLength(0);
+  });
+
+  it("does not wander after stop()", () => {
+    const { timers, idleLife, wanders } = setupWander();
+    idleLife.start();
+    idleLife.stop();
+
+    timers.advance(IDLE_LIFE_DEFAULTS.wanderGapMaxMs * 3);
+    expect(wanders).toHaveLength(0);
+    expect(timers.pending()).toBe(0);
+  });
+
+  it("does nothing when no wander handler is wired", () => {
+    const harness = setup({ random: 0.3 });
+    harness.idleLife.start();
+
+    // 没有 onWander 就不该排踱步定时器，否则只是空转。
+    harness.timers.advance(IDLE_LIFE_DEFAULTS.wanderFirstDelayMs);
+    expect(harness.idleLife.wanderNow()).toBe(false);
+  });
+
+  it("wanders immediately on demand", () => {
+    const { idleLife, wanders } = setupWander();
+    idleLife.start();
+
+    expect(idleLife.wanderNow({ direction: "left", durationMs: 1200 })).toBe(true);
+    expect(wanders).toEqual([
+      { direction: "left", durationMs: 1200, speed: IDLE_LIFE_DEFAULTS.wanderSpeed }
+    ]);
+  });
+
+  it("exposes conservative wander defaults", () => {
+    expect(IDLE_LIFE_DEFAULTS.wanderGapMinMs).toBeGreaterThan(60000);
+    expect(IDLE_LIFE_DEFAULTS.wanderGapMinMs).toBeLessThan(IDLE_LIFE_DEFAULTS.wanderGapMaxMs);
+    expect(IDLE_LIFE_DEFAULTS.wanderChance).toBeLessThan(1);
+    expect(IDLE_LIFE_DEFAULTS.wanderDurationMaxMs).toBeLessThan(3000);
   });
 });

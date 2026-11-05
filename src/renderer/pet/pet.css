@@ -55,6 +55,12 @@ body {
   animation: lily-breathe 4.2s ease-in-out infinite, lily-sway 9.4s ease-in-out infinite;
 }
 
+/* 走路：窗口平移期间叠在 stage 上。必须写在 breathing / swaying 之后——
+   三者抢的是同一个 `animation` 属性，靠规则顺序覆盖，走路时呼吸自动让位。 */
+.pet-sprite-stage.lily-walking {
+  animation: lily-walk 620ms ease-in-out infinite;
+}
+
 .pet-sprite-media {
   position: absolute;
   inset: 0;
@@ -222,6 +228,26 @@ body {
   70% { transform: translateX(6px); }
 }
 
+/* 点头：纵向下压 + 重心前倾。transform-origin 在 50% 92%（脚底附近），
+   所以压缩主要由上半身承担，脚几乎不动。
+   幅度按「实际显示尺寸下能看出来」定：1.5% 压缩在 250px 高的画面上只有 4px，
+   实测读不出动作，压到 3.8% 才成立。 */
+@keyframes lily-state-nod {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  42% { transform: translateY(4px) scaleY(0.962); }
+  72% { transform: translateY(2px) scaleY(0.984); }
+}
+
+/* 摇头：绕脚底的小角度旋转，读起来就是上半身左右摆。
+   同样是实测调过的值——2.4° 几乎看不出来。 */
+@keyframes lily-state-deny {
+  0%, 100% { transform: rotate(0deg); }
+  18% { transform: rotate(-4.2deg); }
+  42% { transform: rotate(4.2deg); }
+  66% { transform: rotate(-2.4deg); }
+  86% { transform: rotate(1deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   #pet-sprite[data-lily-anim] {
     animation: none;
@@ -255,9 +281,27 @@ body {
   }
 }
 
+/* 一个周期走两步：纵向颠两次，横向各偏一次。 */
+@keyframes lily-walk {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.2deg);
+  }
+  25% {
+    transform: translateY(-4px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(0) rotate(1.2deg);
+  }
+  75% {
+    transform: translateY(-4px) rotate(0deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pet-sprite-stage.lily-breathing,
-  .pet-sprite-stage.lily-swaying {
+  .pet-sprite-stage.lily-swaying,
+  .pet-sprite-stage.lily-walking {
     animation: none;
   }
 

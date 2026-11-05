@@ -126,10 +126,14 @@
   - 抠图阈值放宽到 190（这批生成底色 207–215），脚本新增 `--bg-threshold`。
   - 记录见 [形象规范第 14 节](docs/lily-character-spec.md)，对比图 `docs/concept/lily-expressions.jpg`。
   - 参数化（真·分层 SVG 或 Live2D）推后到 P3 之后，因为要先把 `<img>` 换成内联 `<svg>` 注入。
-- [~] `P1-04` 基础动作：呼吸、眨眼、点头、摇头、蹦、摇晃、走路位移（M）
+- [x] `P1-04` 基础动作：呼吸、眨眼、点头、摇头、蹦、摇晃、走路位移（M）
   - 结果（2026-11-05）：**呼吸 + 眨眼已上线**（v0.1.4）。呼吸是 CSS 动画（4.2s 上下 1.6% + 9.4s 重心 ±0.35°），作用在新增的 `#pet-sprite-stage` 层，和状态类的 `transform` 互不覆盖。眨眼是把 `idle-blink.png` 叠在默认帧上 92–118ms，间隔 2.6–6.4s，16% 概率连眨两下；只在当前素材等于默认帧时触发（点击/拖拽/视频期间自动跳过）。`prefers-reduced-motion` 下呼吸关闭、眨眼保留。
   - 闭眼帧做法：用 img2img 生成同角色闭眼立绘，抠背景后按「头部最宽行 + 脚底 + 头宽」三个基准对齐到 idle（sx 0.982 / sy 1.025），合成到同尺寸 332×560 画布，做到像素级叠合。
-  - 未做：点头/摇头/蹦/摇晃/走路位移，等 P1-03 的表情变体和 P1-05 状态注册表一起规划。
+  - 结果（2026-11-05 补完，v0.1.6）：**点头 / 摇头 / 走路全部补齐**。
+    - 点头 `nod`、摇头 `deny` 进 `STATE_ANIMATION_PRESETS`，纯 CSS 关键帧。利用既有的 `transform-origin: 50% 92%`（脚底附近）——绕脚底旋转在视觉上就是上半身摆头，纵向下压则读作点头。**没有做头身分层**：真分层要给头部单独裁切一层，接缝风险大于 1–2px 的观感收益，留到 P3 参数化时一起解决。
+    - 走路 `walk` 不占 `data-lily-anim`（那是状态动效），而是挂在 `.pet-sprite-stage.lily-walking` 上，靠 CSS 规则顺序覆盖呼吸/摇摆——同一时刻只有一个 `animation` 属性，走路时呼吸自动让位。
+    - `runMovePet` 在真正位移时（≥8px）加 `lily-walking`，结束或取消时摘掉；`onDragStart` 补了 `cancelMovePetAnimation()`，否则用户抓住走路中的宠物时两个位置源会互相拉扯。
+    - 待机踱步在 `idle-life.js`，独立低频定时器（首次 90s，之后 3–8 分钟），到点只有 50% 概率真走，时长 0.9–1.5s、速度 96px/s。是否允许由外部 `canWander` 判断：状态必须是 `idle`、显示的是默认帧、没在拖拽、鼠标没悬停。配置项 `behavior.idleWander` 可整体关掉。
 - [x] `P1-05` 状态注册表重构：状态从代码里搬到配置，字段见下表（M）
   - 结果（2026-11-05，v0.1.5）：14 个状态全部进 `config.states`（`src/shared/state-registry.js` 是默认表）。
   - 字段：`label` `bubble` `color` `glow` `animation` `animationDurationMs` `animationIterations` `priority` `ttlMs` `fallback` `interruptible` `alwaysApply` `group` `enabled`。

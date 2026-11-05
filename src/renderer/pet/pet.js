@@ -67,7 +67,19 @@ const idleLife = createIdleLife({
     return (config && config.default && config.default.asset) || "";
   },
   getCurrentAsset: () => (sprite && sprite.dataset && sprite.dataset.asset) || "",
-  logger
+  logger,
+  // 只在完全空闲、且用户没碰着的时候自己走两步。
+  canWander: () => {
+    const stateId = (sprite && sprite.dataset && sprite.dataset.lilyState) || "";
+    if (stateId && stateId !== "idle") return false;
+    if (!isDefaultClipActive) return false;
+    if (sprite && sprite.classList && sprite.classList.contains("dragging")) return false;
+    if (sprite && typeof sprite.matches === "function" && sprite.matches(":hover")) return false;
+    return true;
+  },
+  onWander: ({ direction, durationMs, speed }) => {
+    movePet({ direction, durationMs, speed });
+  }
 });
 
 const prefersReducedMotion = typeof window.matchMedia === "function"
@@ -370,7 +382,15 @@ function resolveMoveDirection(direction) {
   };
 }
 
+/* 走路姿势挂在 stage 层：和 sprite 上的状态动效分属两个元素，可以同时跑，
+   不会被状态的 transform 顶掉。 */
+function setWalkingAnimation(enabled) {
+  if (!spriteStage) return;
+  spriteStage.classList.toggle("lily-walking", Boolean(enabled));
+}
+
 function cancelMovePetAnimation() {
+  setWalkingAnimation(false);
   if (!movePetAnimationFrame) return;
   window.cancelAnimationFrame(movePetAnimationFrame);
   movePetAnimationFrame = 0;
@@ -427,6 +447,9 @@ async function runMovePet(action = {}) {
 
   cancelMovePetAnimation();
 
+  // 只有真的会位移时才迈腿；原地"走"反而更怪。
+  if (totalDistance >= 8) setWalkingAnimation(true);
+
   logger.debug("move pet action started", {
     direction,
     speed,
@@ -455,6 +478,7 @@ async function runMovePet(action = {}) {
     }
 
     movePetAnimationFrame = 0;
+    setWalkingAnimation(false);
     logger.debug("move pet action completed", {
       direction,
       speed,
@@ -1161,6 +1185,8 @@ function applyRuntime(runtime) {
     currentConfig?.system?.logging?.enabled !== false,
     currentConfig?.system?.logging?.level || "info"
   );
+  // 踱步可关。老配置里没有 behavior 字段，按开启处理。
+  idleLife.setWanderEnabled(currentConfig?.behavior?.idleWander !== false);
   runtimeModel = buildRuntimeModel({
     config: currentConfig || {},
     activePackage: runtime && runtime.package ? runtime.package : null
@@ -1541,6 +1567,8 @@ const petController = createPetController({
   },
   onDragStart: (event) => {
     dragStartedAt = Date.now();
+    // 用户接管时立刻停止自动位移，否则两个位置源会互相拉扯。
+    cancelMovePetAnimation();
     dragStartPosition = getScreenPosition(event);
     const context = getDragContext("dragStart", event);
     debugRulesLog("drag:start", {
@@ -1728,6 +1756,28 @@ window.__getLilyStateDebug = function () {
     isDefaultClipActive,
     expressions: Object.keys((animationConfig && animationConfig.expressions) || {})
   };
+};
+
+// 调试用：手动触发动作，方便在 CDP 里验证与调参。
+window.__lilyDebug = {
+  walk(options = {}) {
+    movePet({
+      direction: options.direction === "left" ? "left" : "right",
+      durationMs: Number(options.durationMs) || 1200,
+      speed: Number(options.speed) || undefined
+    });
+    return true;
+  },
+  wanderNow(options = {}) {
+    return idleLife.wanderNow(options);
+  },
+  isWalking() {
+    return Boolean(spriteStage && spriteStage.classList.contains("lily-walking"));
+  },
+  animName() {
+    if (!sprite || typeof getComputedStyle !== "function") return "";
+    return getComputedStyle(sprite).animationName;
+  }
 };
 
 window.__getPetRuntimeState = function () {

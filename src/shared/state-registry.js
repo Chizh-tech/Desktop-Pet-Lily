@@ -29,7 +29,12 @@ const STATE_ANIMATION_PRESETS = {
   sway: { label: "摇晃", keyframes: "lily-state-sway", durationMs: 3600, iterations: "infinite", easing: "ease-in-out" },
   droop: { label: "垂头", keyframes: "lily-state-droop", durationMs: 6000, iterations: "infinite", easing: "ease-in-out" },
   cheer: { label: "欢呼", keyframes: "lily-state-cheer", durationMs: 1200, iterations: "infinite", easing: "ease-in-out" },
-  look: { label: "张望", keyframes: "lily-state-look", durationMs: 3200, iterations: "infinite", easing: "ease-in-out" }
+  look: { label: "张望", keyframes: "lily-state-look", durationMs: 3200, iterations: "infinite", easing: "ease-in-out" },
+  // 点头 / 摇头走「绕脚底小幅度旋转与纵向压缩」，在 120px 的显示尺寸下
+  // 观感就是上半身在动。真做头身分层要额外一层裁切，接缝风险大于收益，
+  // 留到 P3 参数化时再处理。
+  nod: { label: "点头", keyframes: "lily-state-nod", durationMs: 560, iterations: 2, easing: "ease-in-out" },
+  deny: { label: "摇头", keyframes: "lily-state-deny", durationMs: 800, iterations: 2, easing: "ease-in-out" }
 };
 
 const STATE_ANIMATION_IDS = Object.keys(STATE_ANIMATION_PRESETS);
