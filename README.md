@@ -2,7 +2,7 @@
 
 住在 Windows 桌面上的元气少女。看得见你的 AI 在忙什么，陪你上课、提醒你做事、记得你说过的话，也会因为你照顾她而长大。
 
-> 当前状态：`v0.1.1` · 开发中 · 形象仍是占位素材
+> 当前状态：`v0.1.2` · 开发中 · 形象仍是占位素材
 > 详细计划见 [`LILY_ROADMAP.md`](LILY_ROADMAP.md)
 
 ---
@@ -14,6 +14,15 @@
 - **素材包**：`.petpack` 导入导出，可更换形象与互动规则
 - **番茄钟**：内置计时逻辑（UI 待接）
 - **控制面板**：素材、动画、互动规则、显示、系统设置，保存即时生效
+
+## 下载
+
+| 平台 | 链接 |
+|---|---|
+| Windows | [Lily-windows.exe](https://github.com/Chizh-tech/Desktop-Pet-Lily/releases/latest/download/Lily-windows.exe) |
+| macOS | [Lily-mac.dmg](https://github.com/Chizh-tech/Desktop-Pet-Lily/releases/latest/download/Lily-mac.dmg) |
+
+全部版本见 [Releases](https://github.com/Chizh-tech/Desktop-Pet-Lily/releases)。Windows 安装包未签名，首次运行可能触发 SmartScreen，选择"更多信息 → 仍要运行"即可。
 
 ## 快速开始
 

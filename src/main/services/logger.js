@@ -59,7 +59,7 @@ function formatLocalTimestamp(date = new Date()) {
 }
 
 function getLogFileName(date = new Date()) {
-  return `desktop-pet-${formatLocalDate(date)}.log`;
+  return `lily-${formatLocalDate(date)}.log`;
 }
 
 function getCurrentLogPath() {
@@ -182,7 +182,7 @@ function mirrorToConsole(level, scope, args) {
 
 function isSafeLogFileName(fileName) {
   return typeof fileName === "string" &&
-    /^desktop-pet-\d{4}-\d{2}-\d{2}\.log$/.test(fileName);
+    /^lily-\d{4}-\d{2}-\d{2}\.log$/.test(fileName);
 }
 
 function pruneOldLogs(maxFiles = DEFAULT_MAX_LOG_FILES) {

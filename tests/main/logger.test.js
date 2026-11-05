@@ -34,8 +34,8 @@ describe("logger", () => {
     const { isSafeLogFileName } = loadLoggerModule()._internals;
 
     it("accepts valid log file names", () => {
-      expect(isSafeLogFileName("desktop-pet-2026-06-28.log")).toBe(true);
-      expect(isSafeLogFileName("desktop-pet-2000-01-01.log")).toBe(true);
+      expect(isSafeLogFileName("lily-2026-06-28.log")).toBe(true);
+      expect(isSafeLogFileName("lily-2000-01-01.log")).toBe(true);
     });
 
     it("rejects invalid names", () => {
@@ -44,10 +44,10 @@ describe("logger", () => {
       expect(isSafeLogFileName(undefined)).toBe(false);
       expect(isSafeLogFileName(123)).toBe(false);
       expect(isSafeLogFileName("../etc/passwd")).toBe(false);
-      expect(isSafeLogFileName("desktop-pet-2026-06-28.txt")).toBe(false);
-      expect(isSafeLogFileName("desktop-pet-2026-06-28.log.bak")).toBe(false);
+      expect(isSafeLogFileName("lily-2026-06-28.txt")).toBe(false);
+      expect(isSafeLogFileName("lily-2026-06-28.log.bak")).toBe(false);
       expect(isSafeLogFileName("other-2026-06-28.log")).toBe(false);
-      expect(isSafeLogFileName("desktop-pet-abcd-ef-gh.log")).toBe(false);
+      expect(isSafeLogFileName("lily-abcd-ef-gh.log")).toBe(false);
     });
   });
 
@@ -270,7 +270,7 @@ describe("logger", () => {
     it("returns empty content for non-existent file", () => {
       logger.configureLogger({ userDataDir: tempDir, silenceConsole: true });
 
-      const result = logger.readLogFile("desktop-pet-1999-01-01.log");
+      const result = logger.readLogFile("lily-1999-01-01.log");
 
       expect(result.ok).toBe(true);
       expect(result.content).toBe("");
@@ -289,9 +289,9 @@ describe("logger", () => {
 
       // Create some fake log files
       const logsDir = path.join(tempDir, "logs");
-      fs.writeFileSync(path.join(logsDir, "desktop-pet-2026-01-01.log"), "a");
-      fs.writeFileSync(path.join(logsDir, "desktop-pet-2026-06-15.log"), "b");
-      fs.writeFileSync(path.join(logsDir, "desktop-pet-2026-03-10.log"), "c");
+      fs.writeFileSync(path.join(logsDir, "lily-2026-01-01.log"), "a");
+      fs.writeFileSync(path.join(logsDir, "lily-2026-06-15.log"), "b");
+      fs.writeFileSync(path.join(logsDir, "lily-2026-03-10.log"), "c");
       // Non-matching files should be excluded
       fs.writeFileSync(path.join(logsDir, "other-file.txt"), "d");
 
@@ -299,9 +299,9 @@ describe("logger", () => {
 
       expect(result.ok).toBe(true);
       expect(result.files.length).toBe(3);
-      expect(result.files[0].name).toBe("desktop-pet-2026-06-15.log");
-      expect(result.files[1].name).toBe("desktop-pet-2026-03-10.log");
-      expect(result.files[2].name).toBe("desktop-pet-2026-01-01.log");
+      expect(result.files[0].name).toBe("lily-2026-06-15.log");
+      expect(result.files[1].name).toBe("lily-2026-03-10.log");
+      expect(result.files[2].name).toBe("lily-2026-01-01.log");
     });
 
     it("returns empty array when logs directory does not exist", () => {
@@ -335,7 +335,7 @@ describe("logger", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       const logsDir = path.join(tempDir, "logs");
-      fs.writeFileSync(path.join(logsDir, "desktop-pet-2026-01-01.log"), "old");
+      fs.writeFileSync(path.join(logsDir, "lily-2026-01-01.log"), "old");
 
       const before = logger.listLogFiles();
       expect(before.files.length).toBeGreaterThan(0);
@@ -360,19 +360,19 @@ describe("logger", () => {
       const logsDir = path.join(tempDir, "logs");
       for (let i = 1; i <= 15; i++) {
         const day = String(i).padStart(2, "0");
-        fs.writeFileSync(path.join(logsDir, `desktop-pet-2026-01-${day}.log`), `log ${i}`);
+        fs.writeFileSync(path.join(logsDir, `lily-2026-01-${day}.log`), `log ${i}`);
       }
 
       pruneOldLogs(5);
 
       const remaining = fs.readdirSync(logsDir)
-        .filter((f) => f.startsWith("desktop-pet-"))
+        .filter((f) => f.startsWith("lily-"))
         .sort();
 
       expect(remaining.length).toBe(5);
       // Should keep the 5 newest (highest dates)
-      expect(remaining[0]).toBe("desktop-pet-2026-01-11.log");
-      expect(remaining[4]).toBe("desktop-pet-2026-01-15.log");
+      expect(remaining[0]).toBe("lily-2026-01-11.log");
+      expect(remaining[4]).toBe("lily-2026-01-15.log");
     });
 
     it("does nothing when fewer files than maxFiles", () => {
@@ -380,12 +380,12 @@ describe("logger", () => {
       const { pruneOldLogs } = logger._internals;
 
       const logsDir = path.join(tempDir, "logs");
-      fs.writeFileSync(path.join(logsDir, "desktop-pet-2026-01-01.log"), "a");
-      fs.writeFileSync(path.join(logsDir, "desktop-pet-2026-01-02.log"), "b");
+      fs.writeFileSync(path.join(logsDir, "lily-2026-01-01.log"), "a");
+      fs.writeFileSync(path.join(logsDir, "lily-2026-01-02.log"), "b");
 
       pruneOldLogs(10);
 
-      const remaining = fs.readdirSync(logsDir).filter((f) => f.startsWith("desktop-pet-"));
+      const remaining = fs.readdirSync(logsDir).filter((f) => f.startsWith("lily-"));
       expect(remaining.length).toBe(2);
     });
   });

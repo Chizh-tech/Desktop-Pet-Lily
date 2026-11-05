@@ -15,8 +15,8 @@ describe("GitHub Release packaging", () => {
   test("uses stable macOS and Windows release asset names", () => {
     const config = readProjectFile("electron-builder.yml");
 
-    expect(config).toContain("artifactName: Desktop-Pet-mac.${ext}");
-    expect(config).toContain("artifactName: Desktop-Pet-windows.${ext}");
+    expect(config).toContain("artifactName: Lily-mac.${ext}");
+    expect(config).toContain("artifactName: Lily-windows.${ext}");
   });
 
   test("publishes both native installers after v tags", () => {
@@ -28,8 +28,8 @@ describe("GitHub Release packaging", () => {
     expect(workflow).toContain("contents: write");
     expect(workflow).toContain("macos-latest");
     expect(workflow).toContain("windows-latest");
-    expect(workflow).toContain("Desktop-Pet-mac.dmg");
-    expect(workflow).toContain("Desktop-Pet-windows.exe");
+    expect(workflow).toContain("Lily-mac.dmg");
+    expect(workflow).toContain("Lily-windows.exe");
     expect(workflow).toContain("--config electron-builder.yml");
     expect(workflow).toContain("softprops/action-gh-release@v2");
   });
@@ -37,9 +37,9 @@ describe("GitHub Release packaging", () => {
   test("documents stable latest-version download links", () => {
     const readme = readProjectFile("README.md");
 
-    expect(readme).toContain("releases/latest/download/Desktop-Pet-mac.dmg");
-    expect(readme).toContain("releases/latest/download/Desktop-Pet-windows.exe");
-    expect(readme).toContain("https://github.com/duzexu/desktop-pet/releases");
+    expect(readme).toContain("releases/latest/download/Lily-mac.dmg");
+    expect(readme).toContain("releases/latest/download/Lily-windows.exe");
+    expect(readme).toContain("https://github.com/Chizh-tech/Desktop-Pet-Lily/releases");
   });
 
   test("receives renderer-facing versions through sandbox-safe arguments", () => {

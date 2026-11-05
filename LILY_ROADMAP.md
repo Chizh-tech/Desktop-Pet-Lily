@@ -94,7 +94,10 @@
 
 - [x] `P0-01` 改名：`productName` → `Lily`，`appId` → `com.chizh.lily`，窗口标题/托盘/日志名统一（S）
   - 结果（2026-11-05）：已改 `package.json`、`electron-builder.yml`、托盘提示、面板标题、i18n 文案、更新检查链接（指向本仓库）。新增 `services/user-data-migration.js`，启动时把 `%APPDATA%/desktop-pet` 一次性复制到 `%APPDATA%/Lily`，已验证生效且旧目录保留。上游营销页 `landing/` 暂不入库，待 P0-02 清理。
-- [ ] `P0-02` 清理上游残留：`landing/`、赞助二维码、上游文档与无关测试（S）
+- [x] `P0-02` 清理上游残留：`landing/`、赞助二维码、上游文档与无关测试（S）
+  - 结果（2026-11-05）：删 `landing/`（22MB）、`vite.landing.config.js`、`tests/landing/`、`.github/workflows/pages.yml`、`docs/superpowers/`、赞助与封面图。`AGENTS.md` / `CHANGELOG.md` / `docs/DEVELOPMENT.md` / `README.md` 按 Lily 重写。发布产物改 `Lily-windows.exe` / `Lily-mac.dmg`（固定名，稳定下载链接）。版本 `0.1.2`。测试 7 项因改名失配已同步更新。
+  - 遗留：`docs/自创IP校园AI数字机器人——桌宠与直播双形态智慧服务入口.pdf`（上游商业方案）删不掉（回收站拒绝），可手动删。
+  - 遗留：首启「一键导入示例形象包」仍指向上游 `pet.zexu.qzz.io`，该地址已不可达。P1-02 出图后改为本地内置 `lily-starter.petpack`。
 - [ ] `P0-03` 建立自己的模块边界：`src/lily/` 放新功能，尽量不动上游文件（S）
 - [ ] `P0-04` 配置分离：Lily 自己的设置写 `lily.config.json`，不污染上游 config 结构（M）
 - [ ] `P0-05` 打包便携版 exe + 开机自启验证（M）
@@ -177,11 +180,31 @@
 
 - [ ] `P6-01` 课程表数据格式定义（JSON schema：课程/教师/地点/周次/单双周/时间段）（S）
 - [ ] `P6-02` 导入：ics / Excel / 手动表格（三选二即可）（M）
-  - 待你提供：课程表来源。已查 `C:/Work/08_AI/programming`、`C:/Personal`、WeChatProjects 与 GitHub（Chizh-tech），未找到课程表小程序工程
+  - **数据源已定位（2026-11-05）**：`C:/Personal/OneDrive/WeChatProjects/SHU MBA 课程表`
+  - 主数据：`data/courses.json`，85 条，结构见下；导出脚本 `scripts/export-course-catalog.js`
+  - 覆盖 2026-08-22 → 2027-01-17，可作提醒引擎的真实测试集
 - [ ] `P6-03` 提醒引擎：提前 N 分钟、上课、作业截止、考试倒计时（M）
 - [ ] `P6-04` 提醒呈现：气泡 + Windows 通知 + 托盘角标，可按课程静音（S）
 - [ ] `P6-05` 今日视图：点 Lily 看今天还有什么（S）
 - [ ] `P6-06` 课程知识库绑定：每门课挂一个本地文件夹，问"这门课"时限定范围（M）
+- [ ] `P6-07` 课表数据清洗：术语表统一（term 现状有 4 种写法 + 18 条空值）、`timeTbd` 处理、跨学期合并（S）
+  - 数据质量：`term` 字段同时存在 `Term 1`(52) / `2026 秋`(6) / `2026-2027 学年秋季学期`(7) / `2026 年下半年`(2) / 空(18)；`program` 同样混乱
+  - `date + startTime/endTime` 可直接算提醒；`timeTbd: true` 的课只做"日期级"提醒
+
+**课程表 JSON 字段（实测结构，P6-01 以此为基准）**
+
+| 字段 | 用途 |
+|---|---|
+| `id` / `courseCode` | 稳定标识，用于去重与静音配置 |
+| `title` / `titleEn` | 名称，中英双语 |
+| `date`（`YYYY-MM-DD`）+ `weekday` | 日期维度，周几用于周视图 |
+| `startTime` / `endTime`（`HH:mm`） | 提醒计算依据；空串配 `timeTbd: true` |
+| `room` / `roomEn` | 地点 |
+| `teacher` / `teacherEn` | 教师 |
+| `color` | 课表配色，可直接映射不同课程的气泡风格 |
+| `term` / `program` | 学期与项目（需清洗） |
+| `materials[]` | `{name,size,path,cloud}`，云存储路径 → P6-06 知识库素材来源 |
+| `note` / `description` / `assessment` / `learningObjectives` / `recommendedReadings` 等 | 长文本，进课程知识库做问答语料 |
 
 ### P7 · 资源包与分发
 

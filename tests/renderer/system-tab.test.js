@@ -60,7 +60,7 @@ describe("system tab about section", () => {
       }
     }), config);
 
-    expect(html).toContain("Desktop Pet v0.1.0 is up to date.");
+    expect(html).toContain("Lily v0.1.0 is up to date.");
     expect(html).not.toContain('data-target="update"');
   });
 });

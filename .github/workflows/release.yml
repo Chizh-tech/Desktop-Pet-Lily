@@ -18,13 +18,13 @@ jobs:
           - os: macos-latest
             platform: mac
             target: dmg
-            artifact: desktop-pet-mac
-            asset: release/Desktop-Pet-mac.dmg
+            artifact: lily-mac
+            asset: release/Lily-mac.dmg
           - os: windows-latest
             platform: win
             target: nsis
-            artifact: desktop-pet-windows
-            asset: release/Desktop-Pet-windows.exe
+            artifact: lily-windows
+            asset: release/Lily-windows.exe
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -74,5 +74,5 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            release-assets/Desktop-Pet-mac.dmg
-            release-assets/Desktop-Pet-windows.exe
+            release-assets/Lily-mac.dmg
+            release-assets/Lily-windows.exe

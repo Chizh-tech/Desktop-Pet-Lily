@@ -17,4 +17,4 @@ mac:
 win:
   target:
     - nsis
-  artifactName: Lily-windows-${version}.${ext}
+  artifactName: Lily-windows.${ext}
