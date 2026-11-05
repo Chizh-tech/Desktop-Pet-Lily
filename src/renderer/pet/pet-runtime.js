@@ -44,6 +44,10 @@ function getAnimations(config = {}, manifest = null) {
       ...(manifestAnimations.default || {}),
       ...(configAnimations.default || {})
     },
+    blink: {
+      ...(manifestAnimations.blink || {}),
+      ...(configAnimations.blink || {})
+    },
     clips: Array.from(mergedClips.values())
   };
 }
@@ -97,12 +101,18 @@ export function buildRuntimeModel({
   const resolvedClips = clips.map(resolveClip);
   const clipById = new Map([resolvedDefault, ...resolvedClips].filter(Boolean).map((clip) => [clip.id, clip]));
 
+  // 闭眼帧是可选的：素材包没提供（或文件缺失）时解析为空，眨眼自动降级为不闪。
+  const blinkClip = animations.blink && (animations.blink.asset || animations.blink.id)
+    ? resolveClip({ id: "blink", ...animations.blink })
+    : null;
+
   return {
     config,
     activePackage,
     animationConfig: {
       default: resolvedDefault,
-      clips: resolvedClips
+      clips: resolvedClips,
+      blink: blinkClip && blinkClip.asset ? blinkClip : null
     },
     clipById,
     rules: mergeRulesById(manifestRules, configRules)

@@ -1017,4 +1017,33 @@ describe("stateful (sustained) rules", () => {
       { type: "showMessage", text: "hovering" }
     ]);
   });
+
+  it("resolves the blink frame from the package when one is present", () => {
+    const model = buildRuntimeModel({
+      config: { animations: { blink: { asset: "assets/idle-blink.png" } } },
+      activePackage: {
+        manifest: { animations: { default: { id: "idle", asset: "assets/idle.png" }, clips: [] } },
+        assetsByPath: {
+          "assets/idle.png": "file:///pet/assets/idle.png",
+          "assets/idle-blink.png": "file:///pet/assets/idle-blink.png"
+        }
+      }
+    });
+
+    expect(model.animationConfig.blink).toEqual(
+      expect.objectContaining({ asset: "file:///pet/assets/idle-blink.png" })
+    );
+  });
+
+  it("degrades to no blink when the package lacks the frame", () => {
+    const model = buildRuntimeModel({
+      config: { animations: { blink: { asset: "assets/idle-blink.png" } } },
+      activePackage: {
+        manifest: { animations: { default: { id: "idle", asset: "assets/idle.png" }, clips: [] } },
+        assetsByPath: { "assets/idle.png": "file:///pet/assets/idle.png" }
+      }
+    });
+
+    expect(model.animationConfig.blink).toBeNull();
+  });
 });

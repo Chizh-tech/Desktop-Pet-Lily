@@ -10,11 +10,14 @@
     <main id="pet-root">
       <div id="message-bubble" hidden role="status" aria-live="polite"></div>
       <div id="pomodoro-overlay" hidden role="timer" aria-live="polite"></div>
-      <div id="pet-sprite" class="pet-sprite" role="img" aria-label="desktop pet">
-        <img id="pet-sprite-image" class="pet-sprite-media" alt="" draggable="false">
-        <video id="pet-sprite-video" class="pet-sprite-media" muted playsinline preload="auto" hidden></video>
-        <canvas id="pet-sprite-canvas" class="pet-sprite-media" hidden></canvas>
-        <canvas id="pet-sprite-green-canvas" class="pet-sprite-media" hidden></canvas>
+      <div id="pet-sprite" class="pet-sprite" role="img" aria-label="Lily">
+        <div id="pet-sprite-stage" class="pet-sprite-stage">
+          <img id="pet-sprite-image" class="pet-sprite-media" alt="" draggable="false">
+          <video id="pet-sprite-video" class="pet-sprite-media" muted playsinline preload="auto" hidden></video>
+          <canvas id="pet-sprite-canvas" class="pet-sprite-media" hidden></canvas>
+          <canvas id="pet-sprite-green-canvas" class="pet-sprite-media" hidden></canvas>
+          <img id="pet-sprite-blink" class="pet-sprite-media pet-sprite-blink" alt="" draggable="false" hidden>
+        </div>
       </div>
     </main>
     <script type="module" src="./pet.js"></script>

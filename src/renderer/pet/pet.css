@@ -29,6 +29,7 @@ body {
 }
 
 #pet-sprite {
+  position: relative;
   display: block;
   width: var(--pet-sprite-size);
   height: var(--pet-sprite-size);
@@ -38,7 +39,25 @@ body {
   touch-action: none;
 }
 
+/* 精灵舞台：呼吸动画作用在这一层，和状态类的 transform 互不覆盖。 */
+.pet-sprite-stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: 50% 100%;
+}
+
+.pet-sprite-stage.lily-breathing {
+  animation: lily-breathe 4.2s ease-in-out infinite;
+}
+
+.pet-sprite-stage.lily-swaying {
+  animation: lily-breathe 4.2s ease-in-out infinite, lily-sway 9.4s ease-in-out infinite;
+}
+
 .pet-sprite-media {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -49,6 +68,17 @@ body {
 
 .pet-sprite-media[hidden] {
   display: none;
+}
+
+/* 眨眼帧：叠在默认帧之上，只淡入淡出，不参与布局 */
+.pet-sprite-blink {
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 46ms linear;
+}
+
+.pet-sprite-blink.is-visible {
+  opacity: 1;
 }
 
 #pet-sprite.dragging {
@@ -159,5 +189,43 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #pet-sprite[class*="state-"] {
     animation: none;
+  }
+}
+
+/* ── 待机生命感：呼吸与轻微重心偏移 ────────────────────────────────── */
+/* 只动 scale/rotate，不改变占位尺寸；作用在 stage 上，和 #pet-sprite 的
+   状态 transform 叠加而不冲突。 */
+
+@keyframes lily-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.008, 1.016);
+  }
+}
+
+@keyframes lily-sway {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  30% {
+    rotate: -0.35deg;
+  }
+  70% {
+    rotate: 0.35deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-sprite-stage.lily-breathing,
+  .pet-sprite-stage.lily-swaying {
+    animation: none;
+  }
+
+  .pet-sprite-blink {
+    transition: none;
   }
 }

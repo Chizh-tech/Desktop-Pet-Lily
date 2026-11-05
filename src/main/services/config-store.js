@@ -35,6 +35,20 @@ function mergeConfig(config) {
       ...defaultConfig.system,
       ...(isPlainObject(nextConfig.system) ? nextConfig.system : {})
     },
+    // animations 需要深合并：老配置里没有 blink 字段，浅覆盖会把它丢掉，
+    // 结果老用户永远眨不了眼。clips 是数组，保持整组覆盖。
+    animations: {
+      ...defaultConfig.animations,
+      ...(isPlainObject(nextConfig.animations) ? nextConfig.animations : {}),
+      default: {
+        ...defaultConfig.animations.default,
+        ...(isPlainObject(nextConfig.animations && nextConfig.animations.default) ? nextConfig.animations.default : {})
+      },
+      blink: {
+        ...defaultConfig.animations.blink,
+        ...(isPlainObject(nextConfig.animations && nextConfig.animations.blink) ? nextConfig.animations.blink : {})
+      }
+    },
     interactions: {
       ...defaultConfig.interactions,
       ...(isPlainObject(nextConfig.interactions) ? nextConfig.interactions : {}),

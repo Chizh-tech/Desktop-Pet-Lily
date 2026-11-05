@@ -480,6 +480,7 @@ describe("registerIpc", () => {
     expect(handlers.get("asset:list")(null, "default-pet").assets.map((asset) => asset.asset)).toEqual([
       "assets/click.png",
       "assets/drag.png",
+      "assets/idle-blink.png",
       "assets/idle.png"
     ]);
 

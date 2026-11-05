@@ -20,6 +20,7 @@ const DEFAULT_CONFIG = {
   },
   animations: {
     default: { id: "00000000-0000-4000-8000-000000000001", name: "默认动画", asset: "assets/idle.png" },
+    blink: { asset: "assets/idle-blink.png" },
     clips: [
       { id: "00000000-0000-4000-8000-000000000002", name: "点击动画", asset: "assets/click.png", type: "oneshot", durationMs: 900 },
       { id: "00000000-0000-4000-8000-000000000003", name: "拖拽动画", asset: "assets/drag.png", type: "loop" }

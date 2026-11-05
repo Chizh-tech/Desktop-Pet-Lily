@@ -17,6 +17,7 @@ import { UserTriggerManager } from "./user-trigger-manager.js";
 import { AnimationController } from "./animation-controller.js";
 import { createPetMediaRenderer } from "./media-renderer.js";
 import { createPomodoroRuntime } from "./pomodoro-runtime.js";
+import { createIdleLife } from "./idle-life.js";
 import { createAnimationMovementRunner } from "./animation-movement-runner.js";
 import { createDebugLogger, setDebugRulesEnabled } from "./debug-utils.js";
 import {
@@ -35,10 +36,12 @@ import {
 initLocale();
 
 const sprite = document.querySelector("#pet-sprite");
+const spriteStage = document.querySelector("#pet-sprite-stage");
 const spriteImage = document.querySelector("#pet-sprite-image");
 const spriteVideo = document.querySelector("#pet-sprite-video");
 const spriteCanvas = document.querySelector("#pet-sprite-canvas");
 const spriteGreenCanvas = document.querySelector("#pet-sprite-green-canvas");
+const spriteBlink = document.querySelector("#pet-sprite-blink");
 const bubble = document.querySelector("#message-bubble");
 const pomodoroOverlay = document.querySelector("#pomodoro-overlay");
 const root = document.querySelector("#pet-root");
@@ -52,6 +55,25 @@ const mediaRenderer = createPetMediaRenderer({
   greenScreenBackendPreference: "webgl",
   logger
 });
+
+// 待机生命感：呼吸作用在 stage 层（不和状态动画抢 transform），
+// 眨眼是把闭眼帧叠在默认帧上，素材不匹配时自动跳过。
+const idleLife = createIdleLife({
+  overlay: spriteBlink,
+  getDefaultAsset: () => {
+    const config = runtimeModel && runtimeModel.animationConfig;
+    return (config && config.default && config.default.asset) || "";
+  },
+  getCurrentAsset: () => (sprite && sprite.dataset && sprite.dataset.asset) || "",
+  logger
+});
+
+const prefersReducedMotion = typeof window.matchMedia === "function"
+  && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if (spriteStage && !prefersReducedMotion) {
+  spriteStage.classList.add("lily-breathing", "lily-swaying");
+}
 
 const DEFAULT_MESSAGE_BUBBLE_MAX_WIDTH = 220;
 const MIN_MESSAGE_BUBBLE_MAX_WIDTH = 120;
@@ -1129,6 +1151,9 @@ function applyRuntime(runtime) {
   applyDisplay((currentConfig && currentConfig.display) || {});
   applyInteractionConfig((currentConfig && currentConfig.interactions) || {});
   interactionsPaused = Boolean(currentConfig && currentConfig.system && currentConfig.system.interactionsPaused);
+  const blinkClip = runtimeModel.animationConfig && runtimeModel.animationConfig.blink;
+  idleLife.setBlinkAsset(blinkClip && blinkClip.asset ? blinkClip.asset : "");
+  idleLife.start();
   scheduleRuntimeEvents();
 }
 

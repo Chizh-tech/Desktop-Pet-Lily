@@ -177,4 +177,32 @@ describe("createConfigStore", () => {
 
     expect(store.load().animations.default.asset).toBe("assets/idle.svg");
   });
+
+  it("keeps the default blink frame when an older config has no blink field", () => {
+    fs.mkdirSync(userDataDir, { recursive: true });
+    fs.writeFileSync(path.join(userDataDir, "config.json"), JSON.stringify({
+      currentPackageId: "default-pet",
+      animations: {
+        default: { id: "idle", asset: "assets/idle.png" },
+        clips: [{ id: "click", asset: "assets/click.png", type: "oneshot" }]
+      }
+    }), "utf8");
+    const store = createConfigStore(userDataDir);
+
+    const loaded = store.load();
+
+    expect(loaded.animations.blink.asset).toBe("assets/idle-blink.png");
+    expect(loaded.animations.clips).toHaveLength(1);
+  });
+
+  it("lets a package override the blink frame", () => {
+    fs.mkdirSync(userDataDir, { recursive: true });
+    fs.writeFileSync(path.join(userDataDir, "config.json"), JSON.stringify({
+      currentPackageId: "default-pet",
+      animations: { blink: { asset: "assets/custom-blink.png" } }
+    }), "utf8");
+    const store = createConfigStore(userDataDir);
+
+    expect(store.load().animations.blink.asset).toBe("assets/custom-blink.png");
+  });
 });

@@ -281,6 +281,7 @@ function collectManifestAssetReferences(manifest, config) {
   addAssetReference(assetReferences, manifest && manifest.preview);
   const animations = (config && config.animations) || (manifest && manifest.animations) || {};
   addAssetReference(assetReferences, animations.default && animations.default.asset);
+  addAssetReference(assetReferences, animations.blink && animations.blink.asset);
   if (Array.isArray(animations.clips)) {
     animations.clips.forEach((clip) => addAssetReference(assetReferences, clip && clip.asset));
   }
