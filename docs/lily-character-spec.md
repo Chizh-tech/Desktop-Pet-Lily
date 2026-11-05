@@ -176,30 +176,37 @@ viewBox 0 0 320 400
 | 摇晃 | 整体 rotate ±2°，原点脚底 | 1.2s 循环 | 等待 / 撒娇 |
 | 走路 | 左右腿交替 + 整体位移 | 由移动逻辑驱动 | 上游已有 movement runner |
 
-## 9. 状态 → 表情映射（配合 P1-05 的 14 状态）
+## 9. 状态 → 表情映射（已落地，配置在 `config.states[*].expression`）
 
-| 状态 | 表情 | 附加效果 |
-|---|---|---|
-| `idle` | 平静 | 呼吸 |
-| `sleeping` | 困 | `#props` 出 zzz，整体压暗 10% |
-| `listening` | 期待 | 头部侧倾 5° |
-| `thinking` | 思考 | 天蓝光晕 + 眨眼变慢 |
-| `searching` | 专注 | 头部左右小幅扫视 |
-| `working` | 专注 | 薄荷绿光晕 + 轻微点头 |
-| `longtask` | 专注 + 汗 | 汗滴 props |
-| `waiting_user` | 期待 | 樱粉呼吸光晕 |
-| `waiting_approval` | 为难 | 樱粉脉冲 + 举手 props |
-| `success` / `celebrating` | 大笑 | 蹦 + 星星 props |
-| `error` | 为难 | 红光 + 抖动 |
-| `blocked` | 为难 + 汗 | 灰光 |
-| `offline` | 平静（灰） | 去饱和 60% |
+| 状态 | 表情 | 表情帧 id | 附加效果 |
+|---|---|---|---|
+| `idle` | 平静 | `calm` | 呼吸 |
+| `offline` | 平静（灰） | `calm` | 去饱和 60% |
+| `sleeping` | 困 | `sleepy` | 整体压暗 10% |
+| `listening` | 期待 | `expect` | 头部侧倾 5° |
+| `thinking` | 思考 | `thinking` | 天蓝光晕 |
+| `searching` | 专注 | `focused` | 头部左右小幅扫视 |
+| `working` | 专注 | `focused` | 薄荷绿光晕 + 轻微点头 |
+| `longtask` | 专注 | `focused` | 长任务慢呼吸 |
+| `waiting_user` | 期待 | `expect` | 琥珀呼吸光晕 |
+| `waiting_approval` | 为难 | `troubled` | 橙色抖动 |
+| `success` | 大笑 | `laugh` | 弹一下 |
+| `error` | 为难 | `troubled` | 红光 + 抖动 |
+| `blocked` | 为难 | `troubled` | 紫光 + 摇晃 |
+| `celebrating` | 开心 | `happy` | 欢呼摇摆 + 金光 |
+
+表情帧是**独立叠加层**（`#pet-sprite-expression`），不是替换 `idle.png`：
+
+- 只在当前素材等于默认帧时显示，点击/拖拽动画期间自动隐藏，不会出现「脸在叉腰、身体在欢呼」；
+- 表情帧自带眼睛开合，所以显示期间关闭眨眼，避免双重眼型；
+- 素材包里缺哪张就少哪个表情，自动降级为默认脸，不会报错。
 
 ## 10. 交付清单
 
 - [x] `idle.png` / `click.png` / `drag.png` — 已替换 `src/assets/default-pet/assets/`（v0.1.3）
 - [x] `docs/concept/lily-v1-preview.jpg` — 三姿态预览
-- [ ] `docs/lily-character-spec.md` — 本文档定稿（待人确认配色与比例）
-- [ ] 8 张表情变体（同一姿势、同角色）— P1-03
+- [x] `docs/lily-character-spec.md` — 本文档定稿（配色与比例待最终确认）
+- [x] 8 张表情变体（同一姿势、同角色）— P1-03，见第 14 节
 - [ ] 分层母版 `lily-base.svg` — 推后，见第 12 节
 
 ## 11. 验收标准
@@ -295,3 +302,35 @@ CSS 动画，作用在 `#pet-sprite-stage`（`.lily-breathing` / `.lily-swaying`
 - 只有「睁/闭」两态，没有半闭眼（困倦）与眨眼时的眉毛联动；
 - 闭眼帧的表情是「微笑张嘴」，与 idle 一致；如果以后做「思考」表情，需要各自配一张闭眼帧；
 - 对齐是手算一次的，换立绘必须重跑第 13.1 节的流程。
+
+## 14. 八张表情帧（2026-11-05，P1-03）
+
+### 14.1 素材
+
+| 文件 | 表情 | 尺寸 | 对齐系数 |
+|---|---|---|---|
+| `assets/expressions/calm.png` | 平静（闭嘴微笑） | 332×560 | sx 1.0192 / sy 0.9880 |
+| `assets/expressions/happy.png` | 开心（露齿笑） | 332×560 | sx 1.0127 / sy 0.9951 |
+| `assets/expressions/laugh.png` | 大笑（闭眼） | 332×560 | sx 1.0159 / sy 0.9832 |
+| `assets/expressions/thinking.png` | 思考（眼睛上瞟） | 332×560 | sx 1.0192 / sy 0.9903 |
+| `assets/expressions/focused.png` | 专注（锐利凝视） | 332×560 | sx 1.0391 / sy 0.9856 |
+| `assets/expressions/expect.png` | 期待（星星眼） | 332×560 | sx 1.0192 / sy 0.9762 |
+| `assets/expressions/troubled.png` | 为难（八字眉） | 332×560 | sx 1.0095 / sy 0.9856 |
+| `assets/expressions/sleepy.png` | 困（半闭眼） | 332×560 | sx 1.0063 / sy 0.9880 |
+
+横向对比图：`docs/concept/lily-expressions.jpg`；运行态截图：`docs/concept/lily-states-live.jpg`。
+
+### 14.2 生成流程
+
+1. 以 `idle.png` 作参考图做 img2img（`input_fidelity: high`），提示词固定「同角色 / 同服装 / 同姿势 / 全身入镜」，只改表情一句；
+2. 纯浅灰底生成（这批实测底色 207–215，比第一批暗），跑 `tools/align-expression-frame.py` 抠背景 + 三基准对齐；
+3. 抠图阈值从 `min(r,g,b) >= 214` 放宽到 `190`，通道差 `34 → 24`——否则整张灰底会被当成主体，对齐系数直接算飞。脚本新增 `--bg-threshold` 参数备用。
+
+对齐结果：头宽全部 319px、脚底全部 559 行，头部最宽行差 0–4px（`expect` 因为张嘴 11px，视觉无感），横向包围盒 2–330。
+
+### 14.3 已知差距
+
+- 八张是「同一姿势换脸」，不是可组合的分层表情；换姿势必须重新生成整套；
+- `focused` 在缩到 120px 时略带「生气」观感，与 `error` 的 `troubled` 区分度靠光晕补；
+- 每张表情都对应一张独立 PNG（约 240KB/张），八张合计约 1.9MB，比矢量方案重；
+- 没有半闭眼中间态，眨眼与「困」之间切换是硬切。

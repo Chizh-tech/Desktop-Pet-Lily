@@ -9,7 +9,7 @@ export const state = {
   config: null,
   savingKey: "",
   selectedStateType: "idle",
-  statesMeta: { defaultIds: [], presets: [] },
+  statesMeta: { defaultIds: [], presets: [], expressions: [] },
   selectedStateEntryId: "",
   selectedActionId: "",
   selectedRuleId: "",

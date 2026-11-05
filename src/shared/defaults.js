@@ -23,6 +23,17 @@ const DEFAULT_CONFIG = {
   animations: {
     default: { id: "00000000-0000-4000-8000-000000000001", name: "默认动画", asset: "assets/idle.png" },
     blink: { asset: "assets/idle-blink.png" },
+    // 表情帧叠在默认帧上，状态切换时换脸不换姿势。缺哪张就少哪个表情。
+    expressions: {
+      calm: "assets/expressions/calm.png",
+      happy: "assets/expressions/happy.png",
+      laugh: "assets/expressions/laugh.png",
+      thinking: "assets/expressions/thinking.png",
+      focused: "assets/expressions/focused.png",
+      expect: "assets/expressions/expect.png",
+      troubled: "assets/expressions/troubled.png",
+      sleepy: "assets/expressions/sleepy.png"
+    },
     clips: [
       { id: "00000000-0000-4000-8000-000000000002", name: "点击动画", asset: "assets/click.png", type: "oneshot", durationMs: 900 },
       { id: "00000000-0000-4000-8000-000000000003", name: "拖拽动画", asset: "assets/drag.png", type: "loop" }

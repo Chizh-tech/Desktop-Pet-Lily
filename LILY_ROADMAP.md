@@ -119,8 +119,12 @@
   - 结果（2026-11-05）：三姿态已上线并替换内置素材 —— `assets/idle.png`（双手叉腰）、`click.png`（举臂欢呼）、`drag.png`（悬空张开手）。332×560 @ 透明 PNG，`object-fit: contain` 落在 228×228 精灵框内。预览 `docs/concept/lily-v1-preview.jpg`。
   - 做法修订（见 D1）：v1 走**生成式位图 + img2img 保持一致**，不是手绘 SVG。原因：手绘 SVG 无法达到这个完成度，且要一周以上；位图当天可上线，先用起来再谈参数化。
   - 素材名从 `.svg` 改 `.png`，老配置/老 manifest 由 `src/shared/legacy-assets.js` 在读取时改名，用户不用重置。
-- [ ] `P1-03` 表情与状态表情：先用"生成同姿势的表情变体 PNG + 按状态切图"落地，再评估参数化（M）
-  - 一期计划 8 张：平静 / 开心 / 大笑 / 思考 / 专注 / 期待 / 为难 / 困，全部基于 idle 姿势做 img2img，保证同一张脸。
+- [x] `P1-03` 表情与状态表情：先用"生成同姿势的表情变体 PNG + 按状态切图"落地，再评估参数化（M）
+  - 结果（2026-11-05，v0.1.5）：8 张表情全部上线——平静 / 开心 / 大笑 / 思考 / 专注 / 期待 / 为难 / 困，都在 `assets/expressions/`。
+  - 做法：以 `idle.png` 做 img2img（`input_fidelity: high`），只改表情一句；跑 `tools/align-expression-frame.py` 抠图 + 三基准对齐。头宽统一 319px、脚底统一 559 行。
+  - 接入方式：独立叠加层 `#pet-sprite-expression`，状态表用 `expression` 字段指定；只在默认帧上显示，点击/拖拽期间自动隐藏；显示期间关闭眨眼。
+  - 抠图阈值放宽到 190（这批生成底色 207–215），脚本新增 `--bg-threshold`。
+  - 记录见 [形象规范第 14 节](docs/lily-character-spec.md)，对比图 `docs/concept/lily-expressions.jpg`。
   - 参数化（真·分层 SVG 或 Live2D）推后到 P3 之后，因为要先把 `<img>` 换成内联 `<svg>` 注入。
 - [~] `P1-04` 基础动作：呼吸、眨眼、点头、摇头、蹦、摇晃、走路位移（M）
   - 结果（2026-11-05）：**呼吸 + 眨眼已上线**（v0.1.4）。呼吸是 CSS 动画（4.2s 上下 1.6% + 9.4s 重心 ±0.35°），作用在新增的 `#pet-sprite-stage` 层，和状态类的 `transform` 互不覆盖。眨眼是把 `idle-blink.png` 叠在默认帧上 92–118ms，间隔 2.6–6.4s，16% 概率连眨两下；只在当前素材等于默认帧时触发（点击/拖拽/视频期间自动跳过）。`prefers-reduced-motion` 下呼吸关闭、眨眼保留。

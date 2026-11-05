@@ -19,6 +19,7 @@ const NEW_STATE_DEFAULTS = {
   animation: "breathe",
   animationDurationMs: null,
   animationIterations: null,
+  expression: "",
   priority: 50,
   ttlMs: 5000,
   fallback: "idle",
@@ -43,6 +44,14 @@ function renderAnimationOptions(presets, current) {
   `).join("");
 }
 
+function renderExpressionOptions(expressions, current) {
+  const options = [`<option value="" ${selected(current, "")}>${t("states.noExpression")}</option>`];
+  expressions.forEach((id) => {
+    options.push(`<option value="${escapeHtml(id)}" ${selected(current, id)}>${escapeHtml(id)}</option>`);
+  });
+  return options.join("");
+}
+
 function renderFallbackOptions(states, current) {
   return [`<option value="" ${selected(current, "")}>—</option>`]
     .concat(Object.keys(states).sort().map((id) => `
@@ -51,7 +60,7 @@ function renderFallbackOptions(states, current) {
     .join("");
 }
 
-function renderStateCard(id, meta, { states, presets, isBuiltin }) {
+function renderStateCard(id, meta, { states, presets, expressions, isBuiltin }) {
   const label = escapeHtml(meta.label || id);
   return `
     <section class="panel-section state-card" data-state-card="${escapeHtml(id)}">
@@ -102,6 +111,10 @@ function renderStateCard(id, meta, { states, presets, isBuiltin }) {
             <span>${t("states.fallback")}</span>
             <select data-field="fallback">${renderFallbackOptions(states, meta.fallback || "")}</select>
           </label>
+          <label class="field">
+            <span>${t("states.expression")}</span>
+            <select data-field="expression">${renderExpressionOptions(expressions, meta.expression || "")}</select>
+          </label>
         </div>
         <p class="muted state-hint">${t("states.ttlHint")}</p>
         <label class="toggle">
@@ -118,6 +131,7 @@ export function renderStates(panelState, config) {
   const meta = panelState.statesMeta || {};
   const defaultIds = new Set(meta.defaultIds || []);
   const presets = Array.isArray(meta.presets) ? meta.presets : [];
+  const expressions = Array.isArray(meta.expressions) ? meta.expressions : [];
   const entries = sortEntries(states);
 
   return `
@@ -144,6 +158,7 @@ export function renderStates(panelState, config) {
     ${entries.map(([id, entry]) => renderStateCard(id, entry, {
       states,
       presets,
+      expressions,
       isBuiltin: defaultIds.has(id)
     })).join("")}
   `;
@@ -160,6 +175,7 @@ export function readCardFields(card, base) {
   const priorityInput = field("priority");
   const ttlInput = field("ttlMs");
   const fallbackInput = field("fallback");
+  const expressionInput = field("expression");
   const interruptibleInput = field("interruptible");
   const enabledInput = field("enabled");
 
@@ -179,6 +195,7 @@ export function readCardFields(card, base) {
     priority: priorityInput ? Number(priorityInput.value) : source.priority,
     ttlMs: ttlInput ? Number(ttlInput.value) : source.ttlMs,
     fallback: fallbackInput ? fallbackInput.value : source.fallback,
+    expression: expressionInput ? expressionInput.value : source.expression,
     interruptible: interruptibleInput ? interruptibleInput.checked : source.interruptible,
     enabled: enabledInput ? enabledInput.checked : source.enabled
   };

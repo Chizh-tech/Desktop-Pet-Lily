@@ -288,6 +288,10 @@ function collectManifestAssetReferences(manifest, config) {
   if (Array.isArray(animations.clips)) {
     animations.clips.forEach((clip) => addAssetReference(assetReferences, clip && clip.asset));
   }
+  // 表情帧：状态切换时叠在默认帧上，也要进 assetsByPath 才能拿到 file:// URL。
+  if (animations.expressions && typeof animations.expressions === "object") {
+    Object.values(animations.expressions).forEach((asset) => addAssetReference(assetReferences, asset));
+  }
 
   return assetReferences;
 }
@@ -1107,7 +1111,8 @@ function registerIpc({ getWindows, createPanelWindow, configStore: injectedConfi
       id,
       label: preset.label,
       durationMs: preset.durationMs
-    }))
+    })),
+    expressions: Object.keys((configStore.load().animations || {}).expressions || {})
   }));
   // 面板里点「试一下」时直接把状态推给宠物窗，走和 agent-bridge 同一条渲染链路。
   replaceHandler("states:preview", (_event, payload) => {

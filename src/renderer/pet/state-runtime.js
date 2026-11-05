@@ -36,6 +36,7 @@ export function createStateRuntime({
   showMessage,
   logger,
   isReducedMotion,
+  setExpression,
   timers
 }) {
   const options = { ...STATE_RUNTIME_DEFAULTS };
@@ -78,18 +79,29 @@ export function createStateRuntime({
   }
 
   function clearVisuals() {
-    if (!sprite || typeof sprite.removeAttribute !== "function") return;
-    sprite.removeAttribute("data-lily-state");
-    sprite.removeAttribute("data-lily-anim");
-    sprite.style.removeProperty("--lily-anim-name");
-    sprite.style.removeProperty("--lily-anim-duration");
-    sprite.style.removeProperty("--lily-anim-easing");
-    sprite.style.removeProperty("--lily-anim-iterations");
-    sprite.style.removeProperty("--lily-anim-easing");
-    sprite.style.removeProperty("--lily-state-glow");
+    if (sprite && typeof sprite.removeAttribute === "function") {
+      sprite.removeAttribute("data-lily-state");
+      sprite.removeAttribute("data-lily-anim");
+      sprite.style.removeProperty("--lily-anim-name");
+      sprite.style.removeProperty("--lily-anim-duration");
+      sprite.style.removeProperty("--lily-anim-easing");
+      sprite.style.removeProperty("--lily-anim-iterations");
+      sprite.style.removeProperty("--lily-state-glow");
+    }
+    applyExpression("");
+  }
+
+  function applyExpression(expressionId) {
+    if (typeof setExpression !== "function") return;
+    try {
+      setExpression(expressionId || "");
+    } catch (error) {
+      log("warn", "could not apply expression", { expression: expressionId, error: error.message || error });
+    }
   }
 
   function applyVisuals(id, meta) {
+    applyExpression(meta.expression || "");
     if (!sprite || typeof sprite.setAttribute !== "function") return;
     sprite.setAttribute("data-lily-state", id);
 

@@ -48,6 +48,10 @@ function getAnimations(config = {}, manifest = null) {
       ...(manifestAnimations.blink || {}),
       ...(configAnimations.blink || {})
     },
+    expressions: {
+      ...(manifestAnimations.expressions || {}),
+      ...(configAnimations.expressions || {})
+    },
     clips: Array.from(mergedClips.values())
   };
 }
@@ -106,13 +110,24 @@ export function buildRuntimeModel({
     ? resolveClip({ id: "blink", ...animations.blink })
     : null;
 
+  // 表情帧：{ expressionId: assetPath } → { expressionId: url }，缺哪张就少哪个表情。
+  const expressionSources = animations.expressions && typeof animations.expressions === "object"
+    ? animations.expressions
+    : {};
+  const expressions = {};
+  for (const [expressionId, asset] of Object.entries(expressionSources)) {
+    const url = assetsByPath[asset] || (isLoadableAsset(asset) ? asset : "");
+    if (url) expressions[expressionId] = url;
+  }
+
   return {
     config,
     activePackage,
     animationConfig: {
       default: resolvedDefault,
       clips: resolvedClips,
-      blink: blinkClip && blinkClip.asset ? blinkClip : null
+      blink: blinkClip && blinkClip.asset ? blinkClip : null,
+      expressions
     },
     clipById,
     rules: mergeRulesById(manifestRules, configRules)

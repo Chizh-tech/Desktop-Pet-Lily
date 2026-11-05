@@ -153,7 +153,8 @@ async function loadConfig() {
         if (statesMeta) {
           state.statesMeta = {
             defaultIds: Array.isArray(statesMeta.defaultIds) ? statesMeta.defaultIds : [],
-            presets: Array.isArray(statesMeta.presets) ? statesMeta.presets : []
+            presets: Array.isArray(statesMeta.presets) ? statesMeta.presets : [],
+            expressions: Array.isArray(statesMeta.expressions) ? statesMeta.expressions : []
           };
         }
       } catch (error) {

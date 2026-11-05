@@ -58,6 +58,8 @@ const FALLBACK_META = {
   animationDurationMs: null,
   animationIterations: null,
   animationEasing: "ease-in-out",
+  // 表情帧 id，对应 animations.expressions；空字符串表示用默认脸。
+  expression: "",
   priority: 0,
   ttlMs: 5000,
   fallback: "idle",
@@ -75,6 +77,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#94A3B8",
     glow: 0,
     animation: "none",
+    expression: "calm",
     priority: 10,
     ttlMs: 0,
     fallback: "",
@@ -88,6 +91,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#CBD5E1",
     glow: 0,
     animation: "breathe",
+    expression: "calm",
     priority: 0,
     ttlMs: 0,
     fallback: "",
@@ -101,6 +105,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#818CF8",
     glow: 0.45,
     animation: "droop",
+    expression: "sleepy",
     priority: 5,
     ttlMs: 0,
     fallback: "idle",
@@ -113,6 +118,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#22D3EE",
     glow: 0.6,
     animation: "look",
+    expression: "expect",
     priority: 60,
     ttlMs: 8000,
     fallback: "idle",
@@ -125,6 +131,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#60A5FA",
     glow: 0.7,
     animation: "bob",
+    expression: "thinking",
     priority: 40,
     ttlMs: 6000,
     fallback: "idle",
@@ -137,6 +144,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#2DD4BF",
     glow: 0.6,
     animation: "look",
+    expression: "focused",
     priority: 40,
     ttlMs: 6000,
     fallback: "idle",
@@ -149,6 +157,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#34D399",
     glow: 0.7,
     animation: "bounce",
+    expression: "focused",
     priority: 50,
     ttlMs: 8000,
     fallback: "idle",
@@ -161,6 +170,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#10B981",
     glow: 0.5,
     animation: "float",
+    expression: "focused",
     priority: 45,
     ttlMs: 0,
     fallback: "idle",
@@ -173,6 +183,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#FBBF24",
     glow: 0.75,
     animation: "pulse",
+    expression: "expect",
     priority: 80,
     ttlMs: 0,
     fallback: "idle",
@@ -185,6 +196,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#F97316",
     glow: 0.8,
     animation: "shake",
+    expression: "troubled",
     priority: 90,
     ttlMs: 0,
     fallback: "idle",
@@ -197,6 +209,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#4ADE80",
     glow: 0.8,
     animation: "pop",
+    expression: "laugh",
     priority: 70,
     ttlMs: 4000,
     fallback: "idle",
@@ -209,6 +222,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#F87171",
     glow: 0.8,
     animation: "shake",
+    expression: "troubled",
     priority: 95,
     ttlMs: 6000,
     fallback: "idle",
@@ -221,6 +235,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#A78BFA",
     glow: 0.6,
     animation: "sway",
+    expression: "troubled",
     priority: 85,
     ttlMs: 0,
     fallback: "idle",
@@ -233,6 +248,7 @@ const DEFAULT_STATE_REGISTRY = {
     color: "#FCD34D",
     glow: 0.9,
     animation: "cheer",
+    expression: "happy",
     priority: 100,
     ttlMs: 5000,
     fallback: "idle",
@@ -271,6 +287,14 @@ function normalizeText(value, maxLength, fallbackValue) {
   return value.replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function normalizeExpressionId(value, fallbackValue) {
+  if (value === "") return "";
+  if (typeof value !== "string") return fallbackValue;
+  const id = value.trim().toLowerCase();
+  if (!id) return "";
+  return STATE_ID_PATTERN.test(id) ? id : fallbackValue;
+}
+
 function normalizeIterations(value, fallbackValue) {
   if (value === "infinite") return "infinite";
   if (value === null || value === undefined) return fallbackValue;
@@ -297,6 +321,7 @@ function normalizeStateEntry(id, source, base) {
       : preset.durationMs,
     animationIterations: normalizeIterations(meta.animationIterations, preset.iterations),
     animationEasing: preset.easing,
+    expression: normalizeExpressionId(meta.expression, base.expression),
     priority: Math.round(clampNumber(meta.priority, 0, 100, base.priority)),
     ttlMs: Math.round(clampNumber(meta.ttlMs, 0, MAX_TTL_MS, base.ttlMs)),
     fallback: typeof meta.fallback === "string" ? meta.fallback.trim().toLowerCase() : base.fallback,

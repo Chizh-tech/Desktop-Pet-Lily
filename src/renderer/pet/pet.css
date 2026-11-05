@@ -72,12 +72,23 @@ body {
 
 /* 眨眼帧：叠在默认帧之上，只淡入淡出，不参与布局 */
 .pet-sprite-blink {
-  z-index: 2;
+  z-index: 3;
   opacity: 0;
   transition: opacity 46ms linear;
 }
 
 .pet-sprite-blink.is-visible {
+  opacity: 1;
+}
+
+/* 表情帧：和眨眼帧同一套叠加方式，由状态驱动；缺帧时保持 hidden */
+.pet-sprite-expression {
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 110ms ease-out;
+}
+
+.pet-sprite-expression.is-visible {
   opacity: 1;
 }
 

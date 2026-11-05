@@ -43,6 +43,7 @@ const spriteVideo = document.querySelector("#pet-sprite-video");
 const spriteCanvas = document.querySelector("#pet-sprite-canvas");
 const spriteGreenCanvas = document.querySelector("#pet-sprite-green-canvas");
 const spriteBlink = document.querySelector("#pet-sprite-blink");
+const spriteExpression = document.querySelector("#pet-sprite-expression");
 const bubble = document.querySelector("#message-bubble");
 const pomodoroOverlay = document.querySelector("#pomodoro-overlay");
 const root = document.querySelector("#pet-root");
@@ -76,6 +77,46 @@ if (spriteStage && !prefersReducedMotion) {
   spriteStage.classList.add("lily-breathing", "lily-swaying");
 }
 
+// ── 表情层 ─────────────────────────────────────────────────────────
+// 表情帧和眨眼帧一样，是叠在默认帧上的一张同画布 PNG。只有在默认素材
+// （站立姿势）上才显示，否则点一下换成举臂图时会「脸在叉腰、身体在欢呼」。
+let stateExpressionId = "";
+let isDefaultClipActive = true;
+
+function resolveExpressionUrl(expressionId) {
+  if (!expressionId) return "";
+  const config = runtimeModel && runtimeModel.animationConfig;
+  const expressions = (config && config.expressions) || {};
+  return expressions[expressionId] || "";
+}
+
+function syncExpressionOverlay() {
+  if (!spriteExpression) return;
+  const url = isDefaultClipActive ? resolveExpressionUrl(stateExpressionId) : "";
+
+  if (!url) {
+    spriteExpression.classList.remove("is-visible");
+    spriteExpression.setAttribute("hidden", "");
+    // 没有表情遮罩时才允许眨眼。
+    const blinkClip = runtimeModel && runtimeModel.animationConfig && runtimeModel.animationConfig.blink;
+    idleLife.setBlinkAsset(blinkClip && blinkClip.asset ? blinkClip.asset : "");
+    return;
+  }
+
+  if (spriteExpression.getAttribute("src") !== url) {
+    spriteExpression.setAttribute("src", url);
+  }
+  spriteExpression.removeAttribute("hidden");
+  spriteExpression.classList.add("is-visible");
+  // 表情帧自带眼睛开合状态，再叠眨眼会穿帮。
+  idleLife.setBlinkAsset("");
+}
+
+function setStateExpression(expressionId) {
+  stateExpressionId = typeof expressionId === "string" ? expressionId : "";
+  syncExpressionOverlay();
+}
+
 const DEFAULT_MESSAGE_BUBBLE_MAX_WIDTH = 220;
 const MIN_MESSAGE_BUBBLE_MAX_WIDTH = 120;
 const MAX_MESSAGE_BUBBLE_MAX_WIDTH = 480;
@@ -97,6 +138,7 @@ let stateTimer = 0;
 let messageTimer = 0;
 let currentConfig = null;
 let runtimeModel = buildRuntimeModel();
+let stateBootstrapped = false;
 let ruleRuntime = createRuleRuntime();
 let currentDisplay = {
   locked: false,
@@ -1087,6 +1129,11 @@ function initializeAnimationController() {
           progress: options.progress || 0,
           greenScreen: options.greenScreen
         });
+        // 只有默认帧上才叠表情；点击/拖拽动画期间先让脸跟着身体走。
+        // 用素材地址判断而不是 clipId：loop 类的播放未必带 clipId。
+        const defaultAsset = animationConfig.default && animationConfig.default.asset;
+        isDefaultClipActive = !asset || asset === defaultAsset;
+        syncExpressionOverlay();
       },
       onClipStart: (clip) => {
         // A clip became active (immediate play, queue-advance, or return-to-default).
@@ -1157,6 +1204,11 @@ function applyRuntime(runtime) {
   idleLife.start();
   // 状态表可能刚被面板改过，按新配置重画当前状态（颜色/动效即时生效）。
   stateRuntime.refresh();
+  // 首次加载让 Lily 进入 idle，这样默认表情（平静）也能生效。
+  if (!stateBootstrapped) {
+    stateBootstrapped = true;
+    stateRuntime.apply({ state: "idle" });
+  }
   scheduleRuntimeEvents();
 }
 
@@ -1595,6 +1647,7 @@ const stateRuntime = createStateRuntime({
   getRegistry: () => (currentConfig && currentConfig.states) || {},
   showMessage: (text, durationMs) => showMessage(text, durationMs, { source: "agent-state" }),
   logger,
+  setExpression: setStateExpression,
   isReducedMotion: () => window.matchMedia
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 });
@@ -1665,6 +1718,18 @@ if (window.desktopPet && window.desktopPet.pet) {
 }
 
 // Expose runtime state for panel queries
+// 状态/表情的只读快照，方便面板和调试工具确认渲染层到底拿到了什么。
+window.__getLilyStateDebug = function () {
+  const animationConfig = runtimeModel && runtimeModel.animationConfig;
+  return {
+    active: stateRuntime.getActive(),
+    expressionId: stateExpressionId,
+    expressionUrl: resolveExpressionUrl(stateExpressionId),
+    isDefaultClipActive,
+    expressions: Object.keys((animationConfig && animationConfig.expressions) || {})
+  };
+};
+
 window.__getPetRuntimeState = function () {
   if (!runtimeModel || !ruleRuntime) {
     return null;

@@ -37,10 +37,12 @@ function createHarness({ registry, reducedMotion = false } = {}) {
   const sprite = createFakeSprite();
   const messages = [];
   const logs = [];
+  const expressions = [];
   const runtime = createStateRuntime({
     sprite,
     getRegistry: () => registry || normalizeStateRegistry({}),
     showMessage: (text, durationMs) => messages.push({ text, durationMs }),
+    setExpression: (id) => expressions.push(id),
     logger: {
       info: (message, data) => logs.push({ level: "info", message, data }),
       warn: (message, data) => logs.push({ level: "warn", message, data }),
@@ -48,7 +50,7 @@ function createHarness({ registry, reducedMotion = false } = {}) {
     },
     isReducedMotion: () => reducedMotion
   });
-  return { sprite, messages, logs, runtime };
+  return { sprite, messages, logs, expressions, runtime };
 }
 
 beforeEach(() => {
@@ -99,6 +101,23 @@ describe("createStateRuntime visuals", () => {
     runtime.apply({ state: "thinking" });
     expect(sprite.style.getPropertyValue("--lily-anim-duration")).toBe("900ms");
     expect(sprite.style.getPropertyValue("--lily-anim-iterations")).toBe("3");
+  });
+
+  it("asks for the state's expression frame and clears it afterwards", () => {
+    const { expressions, runtime } = createHarness();
+    runtime.apply({ state: "thinking" });
+    expect(expressions.at(-1)).toBe("thinking");
+    runtime.apply({ state: "success" });
+    expect(expressions.at(-1)).toBe("laugh");
+    runtime.clear();
+    expect(expressions.at(-1)).toBe("");
+  });
+
+  it("sends an empty expression when the state has none", () => {
+    const registry = normalizeStateRegistry({ thinking: { expression: "" } });
+    const { expressions, runtime } = createHarness({ registry });
+    runtime.apply({ state: "thinking" });
+    expect(expressions.at(-1)).toBe("");
   });
 });
 

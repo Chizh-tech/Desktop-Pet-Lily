@@ -17,16 +17,20 @@ import numpy as np
 from PIL import Image
 
 
-def cut_background(path):
+def cut_background(path, threshold=190, channel_spread=24):
     """抠掉生成图里的棋盘格/纯色背景，顺便丢掉角落水印。
 
-    生成图的"透明"通常是画进去的棋盘格，alpha 全 255。做法：从四边泛洪
+    生成图的"透明"通常是画进去的浅灰底，alpha 全 255。做法：从四边泛洪
     接近中性的浅色像素得到背景，取反后用最大前景连通块排除水印。
+
+    threshold 是「多亮算背景」。不同批次生成的底色不一样（实测有 213 和 207
+    两种灰），卡在 214 会把整张图当主体，所以默认放到 190；泛洪只从边缘扩散，
+    被描边围住的白色衬衫、袜子不会被误删。
     """
     rgb = np.array(Image.open(path).convert("RGB"))
     h, w, _ = rgb.shape
     a = rgb.astype(np.int16)
-    candidate = (a.min(axis=2) >= 214) & ((a.max(axis=2) - a.min(axis=2)) <= 34)
+    candidate = (a.min(axis=2) >= threshold) & ((a.max(axis=2) - a.min(axis=2)) <= channel_spread)
 
     def flood(passable, seeds):
         reach = seeds & passable
@@ -122,10 +126,16 @@ def main():
         help="要对齐到的参考帧",
     )
     parser.add_argument("--out", default="", help="输出路径，默认在当前目录")
+    parser.add_argument(
+        "--bg-threshold",
+        type=int,
+        default=190,
+        help="多亮算背景（0-255），底色偏暗的生成图可以调低",
+    )
     args = parser.parse_args()
 
     reference = Image.open(args.reference).convert("RGBA")
-    subject = cut_background(args.input)
+    subject = cut_background(args.input, threshold=args.bg_threshold)
     aligned, info = align(subject, reference)
 
     out = args.out or os.path.join(
