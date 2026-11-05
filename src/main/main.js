@@ -140,7 +140,11 @@ async function boot() {
   trayController = createTray({
     createMenu: createNativeMenu
   });
-  agentBridge = createAgentBridge({ getPetWindow });
+  agentBridge = createAgentBridge({
+    getPetWindow,
+    // 状态表以配置为准，面板改完下一次推送就生效。
+    getStates: () => configStore.load().states
+  });
   try {
     const { origin } = await agentBridge.start();
     logger.info("agent bridge ready", { origin });

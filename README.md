@@ -2,7 +2,7 @@
 
 住在 Windows 桌面上的元气少女。看得见你的 AI 在忙什么，陪你上课、提醒你做事、记得你说过的话，也会因为你照顾她而长大。
 
-> 当前状态：`v0.1.4` · 开发中 · Lily 形象 v1 已上线，带呼吸与眨眼（待机 / 点击 / 拖拽）
+> 当前状态：`v0.1.5` · 开发中 · Lily 形象 v1 已上线，带呼吸与眨眼（待机 / 点击 / 拖拽）；状态改为配置驱动
 > 详细计划见 [`LILY_ROADMAP.md`](LILY_ROADMAP.md)
 
 ---
@@ -10,7 +10,8 @@
 ## 已经能做什么
 
 - **桌面驻留**：透明、无边框、置顶、可拖拽、可鼠标穿透、托盘常驻，不占主工作区
-- **状态联动**：任何程序通过本机 HTTP 把状态推给 Lily，她会换表情光晕并说话
+- **状态联动**：任何程序通过本机 HTTP 把状态推给 Lily，她会换光晕、换动作并说话
+- **状态可配**：14 个内置状态的配色、动效、文案、优先级、超时都在面板「状态」页里改，也能加自定义状态
 - **形象**：元气少女 Lily，待机 / 点击 / 拖拽三姿态，带呼吸与自然眨眼，透明 PNG，浅深壁纸都能看清
 - **素材包**：`.petpack` 导入导出，可更换形象与互动规则
 - **番茄钟**：内置计时逻辑（UI 待接）
@@ -63,8 +64,23 @@ Content-Type: application/json
 GET  http://127.0.0.1:17890/health
 ```
 
-状态白名单：`idle` `thinking` `working` `waiting` `done` `error`。
-文本会截断到 160 字符，`ttlMs` 到期后自动回到空闲。
+状态白名单（14 个）：`offline` `idle` `sleeping` `listening` `thinking` `searching` `working` `longtask`
+`waiting_user` `waiting_approval` `success` `error` `blocked` `celebrating`。
+
+旧名字仍可用：`waiting` → `waiting_user`，`done` → `success`，`failed` → `error`。
+
+文本会截断到 160 字符。`ttlMs` 不传时用状态自己的超时；状态超时填 0 表示一直保持。
+高优先级状态可以顶掉低优先级的，`idle` / `offline` 例外——它们永远能一键复位。
+
+状态表存在 `config.json` 的 `states` 里，长这样：
+
+```json
+{
+  "thinking": { "label": "思考", "color": "#60a5fa", "glow": 0.7, "animation": "bob", "priority": 40, "ttlMs": 6000, "bubble": "在想…" }
+}
+```
+
+自定义状态写进去就能用，不需要改代码；面板「状态」页是同一份数据的图形界面。
 
 ## 设计原则
 

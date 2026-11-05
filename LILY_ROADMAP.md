@@ -126,9 +126,18 @@
   - 结果（2026-11-05）：**呼吸 + 眨眼已上线**（v0.1.4）。呼吸是 CSS 动画（4.2s 上下 1.6% + 9.4s 重心 ±0.35°），作用在新增的 `#pet-sprite-stage` 层，和状态类的 `transform` 互不覆盖。眨眼是把 `idle-blink.png` 叠在默认帧上 92–118ms，间隔 2.6–6.4s，16% 概率连眨两下；只在当前素材等于默认帧时触发（点击/拖拽/视频期间自动跳过）。`prefers-reduced-motion` 下呼吸关闭、眨眼保留。
   - 闭眼帧做法：用 img2img 生成同角色闭眼立绘，抠背景后按「头部最宽行 + 脚底 + 头宽」三个基准对齐到 idle（sx 0.982 / sy 1.025），合成到同尺寸 332×560 画布，做到像素级叠合。
   - 未做：点头/摇头/蹦/摇晃/走路位移，等 P1-03 的表情变体和 P1-05 状态注册表一起规划。
-- [ ] `P1-05` 状态注册表重构：状态从代码里搬到配置，字段见下表（M）
+- [x] `P1-05` 状态注册表重构：状态从代码里搬到配置，字段见下表（M）
+  - 结果（2026-11-05，v0.1.5）：14 个状态全部进 `config.states`（`src/shared/state-registry.js` 是默认表）。
+  - 字段：`label` `bubble` `color` `glow` `animation` `animationDurationMs` `animationIterations` `priority` `ttlMs` `fallback` `interruptible` `alwaysApply` `group` `enabled`。
+  - 视觉改成数据驱动：CSS 只留 12 个关键帧（`lily-state-*`），运行时写 `data-lily-state` / `data-lily-anim` 和 `--lily-anim-*` / `--lily-state-glow`，加状态不用改 CSS。
+  - 优先级仲裁（P1-06 的基础版）：高优先级顶低优先级；`interruptible: false` 只能被更高级打断；`alwaysApply` 的 `idle` / `offline` 永远能复位。
+  - agent-bridge 白名单改读配置，`/health` 返回完整注册表；旧名 `waiting` / `done` / `failed` 走别名。
+  - 面板「状态」页已落地（原 P1-07 的最小版）：逐项编辑、带未保存修改预览、新增/删除自定义状态、恢复默认。
+  - 测试：`tests/shared/state-registry.test.js`（22）、`tests/renderer/state-runtime.test.js`（22）、`tests/main/agent-bridge.test.js`（10）。
 - [ ] `P1-06` 状态机：优先级、打断规则、超时回落、互斥组（M）
-- [ ] `P1-07` 面板新增"状态"页：改颜色/动效/文案/优先级，即时生效（M）
+  - 优先级、超时回落、`alwaysApply` 已在 P1-05 落地；剩互斥组、排队、多源合并（依赖 P2-01 事件模型）。
+- [~] `P1-07` 面板新增"状态"页：改颜色/动效/文案/优先级，即时生效（M）
+  - 最小版已完成（见 P1-05）。待补：拖动排序、分组展示、每状态的关键帧时长微调、批量复制状态。
 - [ ] `P1-08` 自身状态与世界状态分层：`agentState`（AI 在干嘛）× `selfState`（饿/困/开心）（M）
 
 **建议的状态表（先按这个，后面可自由加）**

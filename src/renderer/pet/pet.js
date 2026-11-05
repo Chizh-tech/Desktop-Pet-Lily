@@ -18,6 +18,7 @@ import { AnimationController } from "./animation-controller.js";
 import { createPetMediaRenderer } from "./media-renderer.js";
 import { createPomodoroRuntime } from "./pomodoro-runtime.js";
 import { createIdleLife } from "./idle-life.js";
+import { createStateRuntime } from "./state-runtime.js";
 import { createAnimationMovementRunner } from "./animation-movement-runner.js";
 import { createDebugLogger, setDebugRulesEnabled } from "./debug-utils.js";
 import {
@@ -1154,6 +1155,8 @@ function applyRuntime(runtime) {
   const blinkClip = runtimeModel.animationConfig && runtimeModel.animationConfig.blink;
   idleLife.setBlinkAsset(blinkClip && blinkClip.asset ? blinkClip.asset : "");
   idleLife.start();
+  // 状态表可能刚被面板改过，按新配置重画当前状态（颜色/动效即时生效）。
+  stateRuntime.refresh();
   scheduleRuntimeEvents();
 }
 
@@ -1586,39 +1589,18 @@ sprite.addEventListener("mousemove", throttledMouseMove);
 root.addEventListener("contextmenu", handleContextMenu);
 
 // ── Lily 工作状态（由 main 的 agent-bridge 经 IPC 推入）────────────────────
-const AGENT_STATE_CLASSES = ["state-thinking", "state-working", "state-waiting", "state-done", "state-error"];
-let agentStateTimer = 0;
-let lastAgentState = "";
+// 状态长什么样由 config.states 决定，这里只负责把事件交给运行时。
+const stateRuntime = createStateRuntime({
+  sprite,
+  getRegistry: () => (currentConfig && currentConfig.states) || {},
+  showMessage: (text, durationMs) => showMessage(text, durationMs, { source: "agent-state" }),
+  logger,
+  isReducedMotion: () => window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+});
 
 function applyAgentState(payload) {
-  if (!payload || !sprite) return;
-  const state = String(payload.state || "").toLowerCase();
-
-  sprite.classList.remove(...AGENT_STATE_CLASSES);
-  window.clearTimeout(agentStateTimer);
-  agentStateTimer = 0;
-
-  if (state && state !== "idle") {
-    sprite.classList.add(`state-${state}`);
-  }
-
-  if (payload.text) {
-    showMessage(payload.text, Math.max(1200, Number(payload.ttlMs) || 5000));
-  }
-
-  if (state && state !== "idle") {
-    const ttlMs = Number(payload.ttlMs) || 5000;
-    agentStateTimer = window.setTimeout(() => {
-      sprite.classList.remove(...AGENT_STATE_CLASSES);
-      lastAgentState = "idle";
-      logger.info("agent state cleared", { previousState: state });
-    }, ttlMs);
-  }
-
-  if (state !== lastAgentState) {
-    logger.info("agent state applied", { state, source: payload.source, ttlMs: payload.ttlMs });
-    lastAgentState = state;
-  }
+  stateRuntime.apply(payload);
 }
 
 loadInitialConfig();

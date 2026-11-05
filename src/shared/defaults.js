@@ -1,3 +1,5 @@
+const { DEFAULT_STATE_REGISTRY, normalizeStateRegistry } = require("./state-registry");
+
 const DEFAULT_CONFIG = {
   currentPackageId: "default-pet",
   display: {
@@ -37,6 +39,9 @@ const DEFAULT_CONFIG = {
       showCloseButton: false
     }
   },
+  // 状态注册表：颜色、动效、文案、优先级、超时都在这里改，代码里不再写死。
+  // 落盘前先规范化，保证默认配置本身就是完整形态（面板直接可编辑）。
+  states: normalizeStateRegistry(DEFAULT_STATE_REGISTRY),
   triggerRules: []
 };
 

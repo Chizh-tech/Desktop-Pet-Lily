@@ -10,6 +10,7 @@ export const TABS = [
   ["assets", () => t("panel.tabs.assets")],
   ["animations", () => t("panel.tabs.animations")],
   ["rules", () => t("panel.tabs.rules")],
+  ["states", () => t("panel.tabs.states")],
   ["display", () => t("panel.tabs.display")],
   ["system", () => t("panel.tabs.system")]
 ];

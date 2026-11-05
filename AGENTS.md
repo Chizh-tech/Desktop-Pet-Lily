@@ -38,7 +38,7 @@ npm run lily -- --health                    # 查桥接
 - **本机优先**：任何监听只绑 `127.0.0.1`，不做云端上报、不加遥测。
 - **仅元数据**：默认不采集对话正文、工具参数与返回内容。需要正文的功能必须默认关闭且本地存储。
 - **只读观测**：Lily 不改动任何 AI 工具的权限、审批或执行结果。
-- **状态走白名单**：新增状态先在 `src/main/services/agent-bridge.js` 白名单登记，再到 `pet.css` 给视觉，最后补 `tools/lily-state.mjs` 的 help。三者缺一不可。
+- **状态是数据，不是代码**：状态表在 `src/shared/state-registry.js`，运行时以 `config.states` 为准。加状态改这一处（或走面板）即可，不要在 bridge、CSS、CLI 里各写一份白名单。只有需要新动效时才去 `pet.css` 加 `@keyframes` 并在 `STATE_ANIMATION_PRESETS` 登记。
 - **文案双语**：`src/shared/i18n.js` 中英文案成对修改，不留单边。
 - **配置迁移**：改 `userData` 目录或配置结构时写迁移，别让用户丢设置；迁移失败要能回滚。
 - **日志**：在 IPC 边界、素材导入、规则匹配、状态迁移、动画播放、错误分支上加结构化 debug 日志，用现有 logger helper。

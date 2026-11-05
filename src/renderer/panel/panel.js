@@ -13,6 +13,7 @@ import { renderOverview, updateRuntimeStatus } from "./tabs/overview.js";
 import { renderAssets } from "./tabs/assets.js";
 import { renderAnimations } from "./tabs/animations.js";
 import { renderRules } from "./tabs/rules.js";
+import { renderStates, createStateActionHandler } from "./tabs/states.js";
 import { renderDisplay } from "./tabs/display.js";
 import { renderSystem } from "./tabs/system.js";
 import { handleFormSubmit } from "./handlers/form-handlers.js";
@@ -144,6 +145,21 @@ async function loadConfig() {
   try {
     state.config = await api.config.load();
     await refreshPackagesAndAssets();
+
+    // 内置状态 id 与可选动效来自 main，面板不硬编码。
+    if (api.states && api.states.meta) {
+      try {
+        const statesMeta = await api.states.meta();
+        if (statesMeta) {
+          state.statesMeta = {
+            defaultIds: Array.isArray(statesMeta.defaultIds) ? statesMeta.defaultIds : [],
+            presets: Array.isArray(statesMeta.presets) ? statesMeta.presets : []
+          };
+        }
+      } catch (error) {
+        logger.warn("Could not load state metadata", { error: error.message || String(error) });
+      }
+    }
 
     // Initialize locale from config
     if (state.config.system?.language) {
@@ -315,6 +331,7 @@ function render() {
     assets: () => renderAssets(state, state.config),
     animations: () => renderAnimations(state, state.config),
     rules: () => renderRules(state, state.config),
+    states: () => renderStates(state, state.config),
     display: () => renderDisplay(state, state.config),
     system: () => renderSystem(state, state.config)
   };
@@ -645,6 +662,15 @@ function handleKeyframeKeydown(event) {
 }
 
 // Event listeners
+const handleStatesAction = createStateActionHandler({
+  rootEl,
+  state,
+  api,
+  saveConfig,
+  render,
+  showBanner
+});
+
 document.addEventListener("click", (event) => {
   closeInactiveFieldHelpPopovers(event.target);
 });
@@ -692,6 +718,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 rootEl.addEventListener("click", async (event) => {
+  if (await handleStatesAction(event)) return;
   await handleClickAction(event, state, api, saveConfig, render, refreshPackagesAndAssets, refreshLogs);
 });
 

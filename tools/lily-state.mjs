@@ -16,7 +16,24 @@
  */
 
 const DEFAULT_PORT = 17890;
-const STATES = ["idle", "thinking", "working", "waiting", "done", "error"];
+// 与 src/shared/state-registry.js 的默认表一致；真正白名单以 /health 返回的为准。
+const STATES = [
+  "offline",
+  "idle",
+  "sleeping",
+  "listening",
+  "thinking",
+  "searching",
+  "working",
+  "longtask",
+  "waiting_user",
+  "waiting_approval",
+  "success",
+  "error",
+  "blocked",
+  "celebrating"
+];
+const ALIASES = { waiting: "waiting_user", done: "success", failed: "error" };
 
 function parseArgs(argv) {
   const options = { port: DEFAULT_PORT, ttlMs: 5000, source: "cli", demo: false, health: false };
@@ -49,11 +66,19 @@ async function postState(baseUrl, payload) {
 }
 
 const DEMO_TEXT = {
+  offline: "连接断了",
+  sleeping: "睡了…",
+  listening: "我在听",
   thinking: "在想…",
+  searching: "找一下",
   working: "干活中",
-  waiting: "等你确认",
-  done: "搞定",
-  error: "出错了"
+  longtask: "我先跑着",
+  waiting_user: "等你一句",
+  waiting_approval: "需要你点一下",
+  success: "搞定",
+  error: "出问题了",
+  blocked: "缺个东西",
+  celebrating: "耶！"
 };
 
 async function main() {
@@ -82,9 +107,11 @@ async function main() {
     return;
   }
 
-  const state = (positional[0] || "").toLowerCase();
+  const rawState = (positional[0] || "").toLowerCase();
+  const state = ALIASES[rawState] || rawState;
   if (!STATES.includes(state)) {
     console.error(`state 必须是以下之一：${STATES.join(", ")}`);
+    console.error(`旧名字仍可用：${Object.entries(ALIASES).map(([from, to]) => `${from}→${to}`).join(", ")}`);
     process.exitCode = 1;
     return;
   }

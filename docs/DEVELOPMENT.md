@@ -109,12 +109,34 @@ DOM / 全局鼠标 / timer 事件
 ```text
 任意程序 / 脚本
 → POST http://127.0.0.1:17890/state   { state, text, ttlMs, source }
-→ agent-bridge 校验白名单 + 截断文本
+→ agent-bridge 查配置里的状态表 + 截断文本
 → pet:agent-state IPC
-→ pet.js applyAgentState() 加状态类 + 气泡，TTL 到期复位
+→ pet.js → state-runtime.apply()
+→ 写 data-lily-state / data-lily-anim + CSS 变量 + 气泡，超时回落到 fallback
 ```
 
-约束：只绑 `127.0.0.1`；端口占用时顺延并写日志；状态走白名单，未知状态丢弃；不采集正文。
+约束：只绑 `127.0.0.1`；端口占用时顺延并写日志；未知 / 停用的状态直接拒绝；不采集正文。
+
+**状态表在哪**：`src/shared/state-registry.js` 是默认值，落盘后以 `config.json` 的 `states` 为准。
+加一个状态只需要在默认表里加一条（或在面板「状态」页新增），**不用改 CSS、不用改 bridge 白名单**。
+只有需要新动效时，才在 `pet.css` 加一个 `@keyframes lily-state-<名字>`，并在
+`STATE_ANIMATION_PRESETS` 登记。
+
+状态字段：
+
+| 字段 | 作用 |
+|---|---|
+| `label` / `bubble` | 面板显示名 / 默认气泡文案（空字符串 = 不弹） |
+| `color` / `glow` | 发光颜色（`#rrggbb`）与强度（0–1，0 = 不发光） |
+| `animation` | 动效预设 id，见 `STATE_ANIMATION_PRESETS` |
+| `animationDurationMs` / `animationIterations` | 覆盖预设定时，`null` = 跟随预设 |
+| `priority` | 0–100，越大越优先 |
+| `ttlMs` | 自动回落毫秒数，0 = 一直保持 |
+| `fallback` | 超时后回到哪个状态 |
+| `interruptible` | `false` 时只能被更高优先级打断 |
+| `alwaysApply` | `true` 时无视优先级（`idle` / `offline` 用来复位） |
+| `group` | 互斥组，P1-06 用 |
+| `enabled` | `false` 时拒绝外部推送，但保留在表里 |
 
 ## 测试与构建
 

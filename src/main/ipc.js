@@ -26,6 +26,7 @@ const { validateManifest, validateCondition, validateAction } = require("../shar
 const { isSafeRelativePath } = require("../shared/path-safety");
 const { SUPPORTED_ASSET_EXTENSIONS } = require("../shared/schema");
 const { DEFAULT_CONFIG } = require("../shared/defaults");
+const { normalizeStateRegistry, resolveStateId, DEFAULT_STATE_REGISTRY, STATE_ANIMATION_PRESETS } = require("../shared/state-registry");
 const { hasLegacyAsset, migrateAnimationAssets } = require("../shared/legacy-assets");
 
 const CHANNELS = [
@@ -58,6 +59,8 @@ const CHANNELS = [
   "pet:set-mouse-passthrough",
   "pet:set-interactions-paused",
   "pet:set-bounds",
+  "states:preview",
+  "states:meta",
   "system:get-launch-at-login",
   "system:set-launch-at-login",
   "system:about:get-info",
@@ -1097,6 +1100,54 @@ function registerIpc({ getWindows, createPanelWindow, configStore: injectedConfi
     }
   });
   replaceHandler("config:load", () => loadConfigForActivePackage(userDataDir, configStore.load()));
+  // 面板需要知道哪些状态是内置的（内置状态只能禁用、不能删）以及有哪些动效可选。
+  replaceHandler("states:meta", () => ({
+    defaultIds: Object.keys(DEFAULT_STATE_REGISTRY),
+    presets: Object.entries(STATE_ANIMATION_PRESETS).map(([id, preset]) => ({
+      id,
+      label: preset.label,
+      durationMs: preset.durationMs
+    }))
+  }));
+  // 面板里点「试一下」时直接把状态推给宠物窗，走和 agent-bridge 同一条渲染链路。
+  replaceHandler("states:preview", (_event, payload) => {
+    const petWindow = getPetWindow(getWindows);
+    if (!petWindow || !petWindow.webContents) {
+      return { ok: false, error: "pet window is not available" };
+    }
+
+    const config = configStore.load();
+    const registry = normalizeStateRegistry(config.states);
+    const stateId = resolveStateId(registry, payload && payload.state);
+    if (!stateId) return { ok: false, error: "unknown state" };
+    // 面板允许带着「还没保存的修改」预览，所以接受一层 override。
+    const override = payload && payload.override && typeof payload.override === "object"
+      ? payload.override
+      : null;
+    const meta = override
+      ? normalizeStateRegistry({ [stateId]: { ...registry[stateId], ...override } })[stateId]
+      : registry[stateId];
+    if (meta.enabled === false) return { ok: false, error: "state is disabled" };
+
+    const requestedTtl = Number(payload && payload.ttlMs);
+    const ttlMs = Number.isFinite(requestedTtl) && requestedTtl >= 0
+      ? Math.round(requestedTtl)
+      : meta.ttlMs;
+    const text = typeof (payload && payload.text) === "string" ? payload.text.slice(0, 160) : "";
+
+    petWindow.webContents.send("pet:agent-state", {
+      state: stateId,
+      text,
+      detail: "",
+      source: "panel",
+      ttlMs,
+      force: Boolean(payload && payload.force),
+      // 预览可能带着未保存的颜色/动效，直接带上 meta，渲染层不用回查配置。
+      meta,
+      at: Date.now()
+    });
+    return { ok: true, state: stateId };
+  });
   replaceHandler("config:save", (_event, config) => {
     const savedConfig = configStore.save(config);
     configureLogger({

@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { DEFAULT_CONFIG } = require("../../shared/defaults");
 const { migrateAnimationAssets } = require("../../shared/legacy-assets");
+const { normalizeStateRegistry } = require("../../shared/state-registry");
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -56,7 +57,9 @@ function mergeConfig(config) {
         ...defaultConfig.interactions.bubble,
         ...(isPlainObject(nextConfig.interactions && nextConfig.interactions.bubble) ? nextConfig.interactions.bubble : {})
       }
-    }
+    },
+    // 状态表以默认注册表打底，用户只写想改的字段；旧配置没有 states 也能直接补全。
+    states: normalizeStateRegistry(nextConfig.states)
   };
 
   return migrateLegacyDefaultAssets(merged);

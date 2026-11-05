@@ -74,6 +74,10 @@ contextBridge.exposeInMainWorld("desktopPetPanel", {
     setMousePassthrough: (enabled) => ipcRenderer.invoke("pet:set-mouse-passthrough", enabled),
     setAlwaysOnTop: (enabled) => ipcRenderer.invoke("pet:set-always-on-top", enabled)
   },
+  states: {
+    meta: () => ipcRenderer.invoke("states:meta"),
+    preview: (payload) => ipcRenderer.invoke("states:preview", payload)
+  },
   system: {
     getLaunchAtLogin: () => ipcRenderer.invoke("system:get-launch-at-login"),
     setLaunchAtLogin: (enabled) => ipcRenderer.invoke("system:set-launch-at-login", enabled),
