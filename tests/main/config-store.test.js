@@ -146,4 +146,35 @@ describe("createConfigStore", () => {
     expect(DEFAULT_CONFIG).toEqual(originalDefaults);
     expect(store.load()).toEqual(originalDefaults);
   });
+
+  it("renames legacy placeholder asset paths in the built-in package", () => {
+    fs.mkdirSync(userDataDir, { recursive: true });
+    fs.writeFileSync(path.join(userDataDir, "config.json"), JSON.stringify({
+      currentPackageId: "default-pet",
+      animations: {
+        default: { id: "idle", asset: "assets/idle.svg" },
+        clips: [{ id: "click", asset: "assets/click.svg", type: "oneshot" }]
+      }
+    }), "utf8");
+    const store = createConfigStore(userDataDir);
+
+    const loaded = store.load();
+
+    expect(loaded.animations.default.asset).toBe("assets/idle.png");
+    expect(loaded.animations.clips[0].asset).toBe("assets/click.png");
+  });
+
+  it("keeps custom package asset paths untouched", () => {
+    fs.mkdirSync(userDataDir, { recursive: true });
+    fs.writeFileSync(path.join(userDataDir, "config.json"), JSON.stringify({
+      currentPackageId: "my-pet",
+      animations: {
+        default: { id: "idle", asset: "assets/idle.svg" },
+        clips: []
+      }
+    }), "utf8");
+    const store = createConfigStore(userDataDir);
+
+    expect(store.load().animations.default.asset).toBe("assets/idle.svg");
+  });
 });

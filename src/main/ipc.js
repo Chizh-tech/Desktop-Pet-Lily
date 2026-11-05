@@ -26,6 +26,7 @@ const { validateManifest, validateCondition, validateAction } = require("../shar
 const { isSafeRelativePath } = require("../shared/path-safety");
 const { SUPPORTED_ASSET_EXTENSIONS } = require("../shared/schema");
 const { DEFAULT_CONFIG } = require("../shared/defaults");
+const { hasLegacyAsset, migrateAnimationAssets } = require("../shared/legacy-assets");
 
 const CHANNELS = [
   "asset:list",
@@ -323,6 +324,23 @@ function copyDirectory(sourceDir, targetDir, rootDir = sourceDir) {
   }
 }
 
+// 内置包 manifest 里如果还写着已删除的占位素材名，就地改写成新名字。
+function migrateDefaultManifestAssets(packageDir) {
+  const manifestPath = path.join(packageDir, "manifest.json");
+  const manifestResult = readJsonFile(manifestPath);
+  if (!manifestResult.ok) return;
+  const manifest = manifestResult.value;
+  if (!manifest || !hasLegacyAsset(manifest.animations)) return;
+
+  const nextManifest = { ...manifest, animations: migrateAnimationAssets(manifest.animations) };
+  try {
+    fs.writeFileSync(manifestPath, JSON.stringify(nextManifest, null, 2), "utf8");
+    logger.info("Migrated bundled package asset names", { packageDir });
+  } catch (error) {
+    logger.warn("Could not migrate bundled package manifest", { error: error.message || error });
+  }
+}
+
 function ensurePackageDir(userDataDir, packageId, config = {}) {
   const packagesDir = path.join(userDataDir, "packages");
   const packageDir = path.join(packagesDir, packageId);
@@ -333,6 +351,16 @@ function ensurePackageDir(userDataDir, packageId, config = {}) {
 
   if (!packageExists) {
     copyDirectory(getBundledDefaultPackageDir(), packageDir);
+  } else if (packageId === "default-pet") {
+    // 内置形象更新时补齐新素材。copyDirectory 只补缺失文件，不会覆盖用户改过的素材。
+    copyDirectory(getBundledDefaultPackageDir(), packageDir);
+    for (const legacyAsset of ["assets/idle.svg", "assets/click.svg", "assets/drag.svg"]) {
+      const legacyPath = path.join(packageDir, legacyAsset);
+      if (fs.existsSync(legacyPath)) {
+        fs.rmSync(legacyPath, { force: true });
+      }
+    }
+    migrateDefaultManifestAssets(packageDir);
   }
 
   const manifestPath = path.join(packageDir, "manifest.json");

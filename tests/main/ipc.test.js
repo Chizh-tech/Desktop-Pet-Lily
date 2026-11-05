@@ -478,9 +478,9 @@ describe("registerIpc", () => {
       ]
     });
     expect(handlers.get("asset:list")(null, "default-pet").assets.map((asset) => asset.asset)).toEqual([
-      "assets/click.svg",
-      "assets/drag.svg",
-      "assets/idle.svg"
+      "assets/click.png",
+      "assets/drag.png",
+      "assets/idle.png"
     ]);
 
     const exported = await handlers.get("petpack:export")(null, "default-pet");
@@ -488,7 +488,7 @@ describe("registerIpc", () => {
     expect(exported.ok).toBe(true);
     expect(exported.packageId).toBe("default-pet");
     expect(fs.existsSync(targetPath)).toBe(true);
-    expect(fs.existsSync(path.join(userDataDir, "packages", "default-pet", "assets", "idle.svg"))).toBe(true);
+    expect(fs.existsSync(path.join(userDataDir, "packages", "default-pet", "assets", "idle.png"))).toBe(true);
   });
 
   it("exports selected trigger rules as a standalone rules JSON file", async () => {
@@ -783,9 +783,9 @@ describe("registerIpc", () => {
   it("keeps existing default package manifests unchanged when loading runtime rules", () => {
     const defaultPackageDir = path.join(userDataDir, "packages", "default-pet");
     fs.mkdirSync(path.join(defaultPackageDir, "assets"), { recursive: true });
-    fs.writeFileSync(path.join(defaultPackageDir, "assets", "idle.svg"), "<svg></svg>", "utf8");
-    fs.writeFileSync(path.join(defaultPackageDir, "assets", "click.svg"), "<svg></svg>", "utf8");
-    fs.writeFileSync(path.join(defaultPackageDir, "assets", "drag.svg"), "<svg></svg>", "utf8");
+    fs.writeFileSync(path.join(defaultPackageDir, "assets", "idle.png"), "png", "utf8");
+    fs.writeFileSync(path.join(defaultPackageDir, "assets", "click.png"), "png", "utf8");
+    fs.writeFileSync(path.join(defaultPackageDir, "assets", "drag.png"), "png", "utf8");
     fs.writeFileSync(path.join(defaultPackageDir, "manifest.json"), JSON.stringify({
       schemaVersion: "2.0.0",
       packageId: "default-pet",
@@ -838,7 +838,7 @@ describe("registerIpc", () => {
     expect(saved.currentPackageId).toBe("my-new-pet");
     expect(fs.existsSync(path.join(userDataDir, "packages", "my-new-pet", "manifest.json"))).toBe(true);
     expect(fs.existsSync(path.join(userDataDir, "packages", "my-new-pet", "assets"))).toBe(true);
-    expect(fs.existsSync(path.join(userDataDir, "packages", "my-new-pet", "assets", "idle.svg"))).toBe(true);
+    expect(fs.existsSync(path.join(userDataDir, "packages", "my-new-pet", "assets", "idle.png"))).toBe(true);
   });
 
   it("keeps Chinese characters when creating package ids", () => {
